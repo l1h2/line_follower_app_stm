@@ -51,7 +51,7 @@ class ControllerWidget(QWidget):
         self.start_button.setToolTip("Start RUNNING mode")
         self.start_button.setStyleSheet(Styles.START_BUTTONS)
         self.start_button.clicked.connect(self._toggle_start)
-        self._update_start_button()
+        self._update_start_button(self._line_follower.state)
 
     def _toggle_start(self) -> None:
         """Toggle the start button to start or stop the robot."""
@@ -60,13 +60,13 @@ class ControllerWidget(QWidget):
         elif self._line_follower.state == RobotStates.RUNNING:
             self._line_follower.send_message(Messages.STOP_SIGNAL)
 
-    def _update_start_button(self) -> None:
+    def _update_start_button(self, state: RobotStates | None) -> None:
         """Update the start button based on the robot's state."""
-        if self._line_follower.state == RobotStates.RUNNING:
+        if state == RobotStates.RUNNING:
             self.start_button.setText("Stop")
             self.start_button.setStyleSheet(Styles.STOP_BUTTONS)
             self.start_button.setEnabled(True)
-        elif self._line_follower.state == RobotStates.IDLE:
+        elif state == RobotStates.IDLE:
             self.start_button.setText("Start")
             self.start_button.setStyleSheet(Styles.START_BUTTONS)
             self.start_button.setEnabled(True)

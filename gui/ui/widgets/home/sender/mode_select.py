@@ -11,12 +11,15 @@ class ModeSelect(QWidget):
     """
     ### ModeSelect Widget
 
-    A widget that allows the user to select a mode from a combo box and send it to a callback function.
+    A widget that allows the user to select a mode from a combo box and send it to the robot.
 
     #### Parameters:
     - `label (str)`: The label for the combo box.
     - `command (SerialOutputs)`: The command associated with the selected mode.
     - `enum_class (type[Enum])`: The enum class containing the available modes.
+
+    #### Properties:
+    - `value (str)`: The currently selected mode.
 
     #### Attributes:
     - `label (QLabel)`: The label for the combo box.
@@ -24,7 +27,7 @@ class ModeSelect(QWidget):
     - `button (QPushButton)`: The button to send the selected mode.
 
     #### Methods:
-    - `send_value() -> None`: Sends the selected mode to the callback function.
+    - `send_value() -> None`: Sends the selected mode to the robot.
     """
 
     def __init__(
@@ -41,9 +44,14 @@ class ModeSelect(QWidget):
         self.setFixedHeight(UIConstants.ROW_HEIGHT)
         self._init_ui(label)
 
+    @property
+    def value(self) -> str:
+        """Get the currently selected mode."""
+        return self.options.currentText()
+
     def send_value(self) -> None:
         """
-        Send the value from the combo box to the callback function.
+        Send the value from the combo box to the robot.
         """
         self._on_input()
 

@@ -5,7 +5,7 @@ import serial
 from PyQt6.QtCore import QObject, pyqtSignal
 from serial.tools import list_ports, list_ports_common
 
-from utils import SerialConfig, SerialMessage, SerialParser
+from utils import SerialConfig, SerialMessage, SerialParser, app_configs
 
 
 class BluetoothApi(QObject):
@@ -191,7 +191,8 @@ class BluetoothApi(QObject):
 
     def _on_frame(self, message: SerialMessage) -> None:
         """Handle received serial messages from the SerialParser."""
-        print(
-            f"Message: {message.message.name}, Payload: {message.payload}, Frame: {message.frame}"
-        )
+        if app_configs.DEBUG_ENABLED:
+            print(
+                f"Message: {message.message.name}, Payload: {message.payload}, Frame: {message.frame}"
+            )
         self.serial_output.emit(message)

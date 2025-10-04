@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from .serial_protocol import SerialMessages
+
 
 class RobotStates(IntEnum):
     """List of robot states used in the program."""
@@ -28,3 +30,11 @@ class StopModes(IntEnum):
     NONE = 0
     TIME = 1
     LAPS = 2
+
+
+PARAM_MAX_VALUES = {
+    SerialMessages.PID_BASE_PWM: 1000,
+    SerialMessages.TURBINE_PWM: 1000,
+    SerialMessages.LAPS: 100,
+    SerialMessages.STOP_TIME: 180,
+}

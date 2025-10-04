@@ -3,19 +3,28 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
 
 from robot import LineFollower
-from utils import SERIAL_MESSAGE_SIZES, Messages, SerialMessages, UIConstants
+from utils import (
+    PARAM_MAX_VALUES,
+    SERIAL_MESSAGE_SIZES,
+    Messages,
+    SerialMessages,
+    UIConstants,
+)
 
 
 class NumInput(QWidget):
     """
     ### NumInput Widget
 
-    A widget that allows the user to input a numeric value and send it via a callback function.
+    A widget that allows the user to input a numeric value and send it to the robot.
 
     #### Parameters:
     - `label (str)`: The label for the input field.
     - `message (SerialMessages)`: The type of message to be sent.
     - `max_value (int)`: The maximum value allowed for the input.
+
+    #### Properties:
+    - `value (str)`: The current value of the input field.
 
     #### Attributes:
     - `label (QLabel)`: The label for the input field.
@@ -23,30 +32,30 @@ class NumInput(QWidget):
     - `button (QPushButton)`: The button to send the input value.
 
     #### Methods:
-    - `send_value() -> None`: Sends the value from the input field to the callback function.
+    - `send_value() -> None`: Sends the value from the input field to the robot.
     """
 
     def __init__(
         self,
         label: str,
         message: SerialMessages,
-        max_value: int | None = None,
     ):
         super().__init__()
         self._message = message
-        self._max_value = (
-            max_value
-            if max_value is not None
-            else (1 << (8 * SERIAL_MESSAGE_SIZES[message])) - 1
-        )
         self._line_follower = LineFollower()
 
         self.setFixedHeight(UIConstants.ROW_HEIGHT)
+        self._set_max_value()
         self._init_ui(label)
+
+    @property
+    def value(self) -> str:
+        """Get the current value of the input field."""
+        return self.input.text()
 
     def send_value(self) -> None:
         """
-        Send the value from the input field to the callback function.
+        Send the value from the input field to the robot.
         """
         self._on_input()
 
@@ -64,7 +73,7 @@ class NumInput(QWidget):
     def _add_label(self, label: str) -> None:
         """Add a label to the widget."""
         self.label = QLabel(label)
-        self.label.setFixedWidth(80)
+        self.label.setFixedWidth(90)
 
     def _add_input(self) -> None:
         """Add an input field for the byte value."""
@@ -90,7 +99,7 @@ class NumInput(QWidget):
             self.input.setText(f"{self._max_value}")
 
     def _on_input(self) -> None:
-        """Handle the input value and send it to the callback function."""
+        """Handle the input value and send it to the robot."""
         value = self.input.text()
 
         if not value.isdigit():
@@ -105,3 +114,13 @@ class NumInput(QWidget):
         layout.addWidget(self.input)
         layout.addWidget(self.button)
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+    def _set_max_value(self) -> None:
+        """Set the maximum value for the input field."""
+        robot_max = PARAM_MAX_VALUES.get(self._message)
+
+        if robot_max is not None:
+            self._max_value = robot_max
+            return
+
+        self._max_value = (1 << (8 * SERIAL_MESSAGE_SIZES[self._message])) - 1

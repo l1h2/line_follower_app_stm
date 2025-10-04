@@ -1,7 +1,15 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
-from utils import UIConstants
+from robot import LineFollower
+from utils import (
+    Booleans,
+    RobotStates,
+    RunningModes,
+    SerialMessages,
+    StopModes,
+    UIConstants,
+)
 
 
 class StrDisplay(QWidget):
@@ -25,12 +33,18 @@ class StrDisplay(QWidget):
 
     def __init__(
         self,
+        message: SerialMessages,
         label: str = "Current value:",
         align: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
     ) -> None:
         super().__init__()
+        self._message = message
+        self._line_follower = LineFollower()
+
         self.setFixedHeight(UIConstants.ROW_HEIGHT)
         self._init_ui(label, align)
+
+        self._line_follower.connect_attr_changer(self._update_value)
 
     def set_value(self, value: str) -> None:
         """
@@ -70,3 +84,21 @@ class StrDisplay(QWidget):
         layout.addWidget(self.label)
         layout.addWidget(self.value)
         layout.setAlignment(align)
+
+    def _update_value(self, message: SerialMessages, value: int) -> None:
+        """Update the value display when the corresponding attribute changes."""
+        if message != self._message:
+            return
+
+        str_value = str(value)
+
+        if message == SerialMessages.STATE:
+            str_value = RobotStates(value).name
+        elif message == SerialMessages.RUNNING_MODE:
+            str_value = RunningModes(value).name
+        elif message == SerialMessages.STOP_MODE:
+            str_value = StopModes(value).name
+        elif message == SerialMessages.LOG_DATA:
+            str_value = Booleans(value).name
+
+        self.value.setText(str_value)

@@ -7,23 +7,43 @@ from utils import RobotStates, RunningModes, SerialMessage, SerialMessages, Stop
 from .api import BluetoothApi
 
 
-class StateChanger(QObject):
+class SignalHandler(QObject):
     """
-    ### StateChanger Class
+    ### SignalHandler Class
 
-    Handles state changes and emit signals. Inherits from QObject to use signals and slots.
+    Handles signals for the LineFollower class. Inherits from QObject to use signals and slots.
 
     #### Signals:
-    - `state_change`: Signal emitted when the state changes.
+    - `state_change (RobotStates)`: Signal emitted when the state changes.
+
+    #### Methods:
+    - `signal_state_change(state: RobotStates) -> None`: Emits the state change signal.
     """
 
-    state_change = pyqtSignal()
+    state_changed = pyqtSignal(RobotStates)
+    attr_changed = pyqtSignal(SerialMessages, int)
 
     def __init__(self):
         super().__init__()
 
-    def signal_state_change(self) -> None:
-        self.state_change.emit()
+    def signal_state_changed(self, state: RobotStates) -> None:
+        """
+        Emits the state changed signal.
+
+        Args:
+            state (RobotStates): The new state of the robot.
+        """
+        self.state_changed.emit(state)
+
+    def signal_attr_changed(self, message: SerialMessages, value: int) -> None:
+        """
+        Emits the attribute changed signal.
+
+        Args:
+            message (SerialMessages): The message type that changed.
+            value (int): The new value of the attribute.
+        """
+        self.attr_changed.emit(message, value)
 
 
 class LineFollower:
@@ -62,44 +82,48 @@ class LineFollower:
         return cls._instance
 
     def __init__(self):
-        if not hasattr(self, "_initialized"):
-            self._state_changer = StateChanger()
+        if hasattr(self, "_initialized"):
+            return
 
-            self._kp = None
-            self._ki = None
-            self._kd = None
-            self._kff = None
-            self._kb = None
-            self._base_pwm = None
-            self._max_pwm = None
-            self._state = None
-            self._running_mode = None
-            self._stop_mode = None
-            self._laps = 0
-            self._stop_time = 0
-            self._log_data = False
-            self._turbine_pwm = 0
+        self._signal_handler = SignalHandler()
 
-            self._bluetooth = BluetoothApi()
-            self._initialized = True
+        self._kp = None
+        self._ki = None
+        self._kd = None
+        self._kff = None
+        self._kb = None
+        self._base_pwm = None
+        self._max_pwm = None
+        self._state = None
+        self._running_mode = None
+        self._stop_mode = None
+        self._laps = 0
+        self._stop_time = 0
+        self._log_data = False
+        self._turbine_pwm = 0
 
-            self._bluetooth.serial_output.connect(self._handle_serial_message)
+        self._bluetooth = BluetoothApi()
 
-            self._config_map = {
-                SerialMessages.PID_KP: self._update_kp,
-                SerialMessages.PID_KI: self._update_ki,
-                SerialMessages.PID_KD: self._update_kd,
-                SerialMessages.PID_KFF: self._update_kff,
-                SerialMessages.PID_KB: self._update_kb,
-                SerialMessages.PID_BASE_PWM: self._update_base_pwm,
-                SerialMessages.PID_MAX_PWM: self._update_max_pwm,
-                SerialMessages.STATE: self._update_state,
-                SerialMessages.RUNNING_MODE: self._update_running_mode,
-                SerialMessages.STOP_MODE: self._update_stop_mode,
-                SerialMessages.LAPS: self._update_laps,
-                SerialMessages.STOP_TIME: self._update_stop_time,
-                SerialMessages.TURBINE_PWM: self._update_turbine_pwm,
-            }
+        self._bluetooth.serial_output.connect(self._handle_serial_message)
+
+        self._config_map = {
+            SerialMessages.PID_KP: self._update_kp,
+            SerialMessages.PID_KI: self._update_ki,
+            SerialMessages.PID_KD: self._update_kd,
+            SerialMessages.PID_KFF: self._update_kff,
+            SerialMessages.PID_KB: self._update_kb,
+            SerialMessages.PID_BASE_PWM: self._update_base_pwm,
+            SerialMessages.PID_MAX_PWM: self._update_max_pwm,
+            SerialMessages.STATE: self._update_state,
+            SerialMessages.RUNNING_MODE: self._update_running_mode,
+            SerialMessages.STOP_MODE: self._update_stop_mode,
+            SerialMessages.LAPS: self._update_laps,
+            SerialMessages.STOP_TIME: self._update_stop_time,
+            SerialMessages.LOG_DATA: self._set_log_data,
+            SerialMessages.TURBINE_PWM: self._update_turbine_pwm,
+        }
+
+        self._initialized = True
 
     @property
     def is_running(self) -> bool:
@@ -190,14 +214,23 @@ class LineFollower:
         """
         self._bluetooth.write_data(message.frame)
 
-    def connect_state_changer(self, slot: Callable[[], None]) -> None:
+    def connect_state_changer(self, slot: Callable[[RobotStates], None]) -> None:
         """
         Connects a slot to the state change signal.
 
         Args:
-            slot (Callable[[], None]): The slot to connect.
+            slot (Callable[[RobotStates], None]): The slot to connect.
         """
-        self._state_changer.state_change.connect(slot)
+        self._signal_handler.state_changed.connect(slot)
+
+    def connect_attr_changer(self, slot: Callable[[SerialMessages, int], None]) -> None:
+        """
+        Connects a slot to the attribute change signal.
+
+        Args:
+            slot (Callable[[SerialMessages, int], None]): The slot to connect.
+        """
+        self._signal_handler.attr_changed.connect(slot)
 
     def _handle_serial_message(self, message: SerialMessage) -> None:
         """Handles incoming serial messages and updates config params."""
@@ -205,61 +238,128 @@ class LineFollower:
             return
 
         value = int.from_bytes(message.payload, byteorder="little")
-        self._config_map[message.message](value)
+        changed = self._config_map[message.message](value)
 
-    def _update_kp(self, kp: int) -> None:
+        if not changed:
+            return
+
+        if message.message == SerialMessages.STATE:
+            self._signal_handler.signal_state_changed(self._state)  # type: ignore
+
+        self._signal_handler.signal_attr_changed(message.message, value)
+
+    def _update_kp(self, kp: int) -> bool:
         """Updates the proportional gain for PID controller."""
+        if self._kp == kp:
+            return False
+
         self._kp = kp
+        return True
 
-    def _update_ki(self, ki: int) -> None:
+    def _update_ki(self, ki: int) -> bool:
         """Updates the integral gain for PID controller."""
+        if self._ki == ki:
+            return False
+
         self._ki = ki
+        return True
 
-    def _update_kd(self, kd: int) -> None:
+    def _update_kd(self, kd: int) -> bool:
         """Updates the derivative gain for PID controller."""
+        if self._kd == kd:
+            return False
+
         self._kd = kd
+        return True
 
-    def _update_kff(self, kff: int) -> None:
+    def _update_kff(self, kff: int) -> bool:
         """Updates the feedforward gain for PID controller."""
+        if self._kff == kff:
+            return False
+
         self._kff = kff
+        return True
 
-    def _update_kb(self, kb: int) -> None:
+    def _update_kb(self, kb: int) -> bool:
         """Updates the brake gain for PID controller."""
+        if self._kb == kb:
+            return False
+
         self._kb = kb
+        return True
 
-    def _update_base_pwm(self, base_pwm: int) -> None:
+    def _update_base_pwm(self, base_pwm: int) -> bool:
         """Updates the base PWM value for motor control."""
+        if self._base_pwm == base_pwm:
+            return False
+
         self._base_pwm = base_pwm
+        return True
 
-    def _update_max_pwm(self, max_pwm: int) -> None:
+    def _update_max_pwm(self, max_pwm: int) -> bool:
         """Updates the maximum PWM value for motor control."""
+        if self._max_pwm == max_pwm:
+            return False
+
         self._max_pwm = max_pwm
+        return True
 
-    def _update_state(self, state: int) -> None:
+    def _update_state(self, state: int) -> bool:
         """Updates the state of the robot."""
-        self._state = RobotStates(state)
-        self._state_changer.signal_state_change()
+        new_state = RobotStates(state)
+        if self._state == new_state:
+            return False
 
-    def _update_running_mode(self, mode: int) -> None:
+        self._state = new_state
+        return True
+
+    def _update_running_mode(self, mode: int) -> bool:
         """Updates the running mode of the robot."""
-        self._running_mode = RunningModes(mode)
+        new_mode = RunningModes(mode)
+        if self._running_mode == new_mode:
+            return False
 
-    def _update_stop_mode(self, mode: int) -> None:
+        self._running_mode = new_mode
+        return True
+
+    def _update_stop_mode(self, mode: int) -> bool:
         """Updates the stop mode of the robot."""
-        self._stop_mode = StopModes(mode)
+        new_mode = StopModes(mode)
+        if self._stop_mode == new_mode:
+            return False
 
-    def _update_laps(self, laps: int) -> None:
+        self._stop_mode = new_mode
+        return True
+
+    def _update_laps(self, laps: int) -> bool:
         """Updates the number of laps completed."""
+        if self._laps == laps:
+            return False
+
         self._laps = laps
+        return True
 
-    def _update_stop_time(self, stop_time: int) -> None:
+    def _update_stop_time(self, stop_time: int) -> bool:
         """Updates the time to stop the robot."""
+        if self._stop_time == stop_time:
+            return False
+
         self._stop_time = stop_time
+        return True
 
-    def _set_log_data(self, log_data: int) -> None:
+    def _set_log_data(self, log_data: int) -> bool:
         """Sets the log data flag."""
-        self._log_data = log_data == 1
+        new_bool = log_data == 1
+        if self._log_data == new_bool:
+            return False
 
-    def _update_turbine_pwm(self, turbine_pwm: int) -> None:
+        self._log_data = new_bool
+        return True
+
+    def _update_turbine_pwm(self, turbine_pwm: int) -> bool:
         """Updates the turbine PWM value for motor control."""
+        if self._turbine_pwm == turbine_pwm:
+            return False
+
         self._turbine_pwm = turbine_pwm
+        return True
