@@ -8,7 +8,7 @@ import time
 
 import serial
 
-from utils import Files, SerialConfig, SerialMessage, SerialMessages, SerialParser
+from utils import Files, SerialConfig, SerialMessage, SerialParser
 
 bluetooth = None
 
@@ -70,15 +70,6 @@ def main() -> None:
 
     print(f"Connected. Listening for data... Saving to {Files.BINARY_FILE}")
     try:
-        send_data(
-            bluetooth, SerialMessage.from_message(SerialMessages.RUNNING_MODE, b"\x01")
-        )
-        send_data(
-            bluetooth,
-            SerialMessage.from_message(SerialMessages.PID_BASE_PWM, b"\x14\x00"),
-        )
-        send_data(bluetooth, SerialMessage.from_message(SerialMessages.START))
-
         process_bluetooth_data(bluetooth)
 
     except serial.SerialException as e:

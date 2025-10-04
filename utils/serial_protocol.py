@@ -22,11 +22,12 @@ class SerialMessages(IntEnum):
     PID_KP = 9
     PID_KI = 10
     PID_KD = 11
-    PID_KFF = 12
-    PID_KB = 13
-    PID_BASE_PWM = 14
-    PID_MAX_PWM = 15
-    TURBINE_PWM = 16
+    PID_KB = 12
+    PID_KFF = 13
+    PID_ACCEL = 14
+    PID_BASE_PWM = 15
+    PID_MAX_PWM = 16
+    TURBINE_PWM = 17
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
@@ -42,8 +43,9 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.PID_KP: 1,
     SerialMessages.PID_KI: 1,
     SerialMessages.PID_KD: 2,
-    SerialMessages.PID_KFF: 1,
     SerialMessages.PID_KB: 1,
+    SerialMessages.PID_KFF: 1,
+    SerialMessages.PID_ACCEL: 2,
     SerialMessages.PID_BASE_PWM: 2,
     SerialMessages.PID_MAX_PWM: 2,
     SerialMessages.TURBINE_PWM: 2,

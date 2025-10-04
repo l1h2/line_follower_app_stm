@@ -21,12 +21,16 @@ class Messages:
         return Messages._int_message(SerialMessages.PID_KD, value)
 
     @staticmethod
+    def SET_KB(value: int) -> SerialMessage:
+        return Messages._int_message(SerialMessages.PID_KB, value)
+
+    @staticmethod
     def SET_KFF(value: int) -> SerialMessage:
         return Messages._int_message(SerialMessages.PID_KFF, value)
 
     @staticmethod
-    def SET_KB(value: int) -> SerialMessage:
-        return Messages._int_message(SerialMessages.PID_KB, value)
+    def SET_ACCEL(value: int) -> SerialMessage:
+        return Messages._int_message(SerialMessages.PID_ACCEL, value)
 
     @staticmethod
     def SET_BASE_PWM(value: int) -> SerialMessage:
