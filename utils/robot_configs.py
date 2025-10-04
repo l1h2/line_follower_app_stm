@@ -34,7 +34,10 @@ class StopModes(IntEnum):
 
 PARAM_MAX_VALUES = {
     SerialMessages.PID_BASE_PWM: 1000,
+    SerialMessages.PID_ACCEL: 2000,
     SerialMessages.TURBINE_PWM: 1000,
     SerialMessages.LAPS: 100,
     SerialMessages.STOP_TIME: 180,
+    SerialMessages.BASE_SPEED: 635,
+    SerialMessages.PID_ALPHA: 100,
 }

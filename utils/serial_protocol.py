@@ -28,6 +28,12 @@ class SerialMessages(IntEnum):
     PID_BASE_PWM = 15
     PID_MAX_PWM = 16
     TURBINE_PWM = 17
+    SPEED_KP = 18
+    SPEED_KI = 19
+    SPEED_KD = 20
+    BASE_SPEED = 21
+    PID_ALPHA = 22
+    PID_CLAMP = 23
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
@@ -49,7 +55,15 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.PID_BASE_PWM: 2,
     SerialMessages.PID_MAX_PWM: 2,
     SerialMessages.TURBINE_PWM: 2,
+    SerialMessages.SPEED_KP: 1,
+    SerialMessages.SPEED_KI: 1,
+    SerialMessages.SPEED_KD: 2,
+    SerialMessages.BASE_SPEED: 2,
+    SerialMessages.PID_ALPHA: 2,
+    SerialMessages.PID_CLAMP: 2,
 }
+
+FLOAT_MESSAGES = {SerialMessages.BASE_SPEED, SerialMessages.PID_ALPHA}
 
 
 @dataclass
@@ -144,6 +158,56 @@ class SerialMessage:
             return SerialMessage(SerialMessages.INVALID_MESSAGE)
 
         return SerialMessage(message, payload, expected_size)
+
+    @staticmethod
+    def from_int(message: SerialMessages, value: int) -> "SerialMessage":
+        """
+        Create a SerialMessage from an integer value.
+
+        Args:
+            message (SerialMessages): The message type.
+            value (int): The integer value to include in the message.
+
+        Returns:
+            SerialMessage: The constructed SerialMessage.
+        """
+        expected_size = SERIAL_MESSAGE_SIZES.get(message, 0)
+        return SerialMessage.from_message(
+            message, value.to_bytes(expected_size, byteorder="little")
+        )
+
+    @staticmethod
+    def from_bool(message: SerialMessages, value: bool) -> "SerialMessage":
+        """
+        Create a SerialMessage from a boolean value.
+
+        Args:
+            message (SerialMessages): The message type.
+            value (bool): The boolean value to include in the message.
+
+        Returns:
+            SerialMessage: The constructed SerialMessage.
+        """
+        byte = b"\x01" if value else b"\x00"
+        return SerialMessage.from_message(message, byte)
+
+    @staticmethod
+    def from_float(message: SerialMessages, value: float) -> "SerialMessage":
+        """
+        Create a SerialMessage from a float value.
+
+        Args:
+            message (SerialMessages): The message type.
+            value (float): The float value to include in the message.
+
+        Returns:
+            SerialMessage: The constructed SerialMessage.
+        """
+        value = int(value * 100)  # Convert to integer representation
+        expected_size = SERIAL_MESSAGE_SIZES.get(message, 0)
+        return SerialMessage.from_message(
+            message, value.to_bytes(expected_size, byteorder="little")
+        )
 
     @property
     def frame(self) -> bytes:

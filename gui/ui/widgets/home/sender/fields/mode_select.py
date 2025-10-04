@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from robot import LineFollower
-from utils import Messages, SerialMessages, UIConstants
+from utils import SerialMessage, SerialMessages, UIConstants
 
 
 class ModeSelect(QWidget):
@@ -93,7 +93,7 @@ class ModeSelect(QWidget):
             return
 
         self._line_follower.send_message(
-            Messages.from_int(self._message, self._enum_class[value].value)
+            SerialMessage.from_int(self._message, self._enum_class[value].value)
         )
 
     def _set_layout(self) -> None:

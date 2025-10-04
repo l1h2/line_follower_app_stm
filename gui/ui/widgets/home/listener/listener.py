@@ -16,18 +16,6 @@ class ListenerWidget(QWidget):
     A widget that listens for incoming data from the robot via Bluetooth and displays it in a user-friendly format.
 
     #### Attributes:
-    - `kp_display (StrDisplay)`: Display for the KP value.
-    - `ki_display (StrDisplay)`: Display for the KI value.
-    - `kd_display (StrDisplay)`: Display for the KD value.
-    - `kff_display (StrDisplay)`: Display for the KFF value.
-    - `kb_display (StrDisplay)`: Display for the KB value.
-    - `base_pwm_display (StrDisplay)`: Display for the base PWM value.
-    - `turbine_pwm_display (StrDisplay)`: Display for the turbine PWM value.
-    - `laps_display (StrDisplay)`: Display for the number of laps.
-    - `stop_time_display (StrDisplay)`: Display for the stop time value.
-    - `running_mode_display (StrDisplay)`: Display for the running mode.
-    - `stop_mode_display (StrDisplay)`: Display for the stop mode.
-    - `log_data_display (StrDisplay)`: Display for the log data.
     - `state_display (StrDisplay)`: Display for the robot state.
     - `output_display (TextDisplay)`: Display for the output text.
     - `debug_button (DebugButton)`: Button to toggle debug mode.
@@ -56,20 +44,14 @@ class ListenerWidget(QWidget):
 
     def _set_layout(self) -> None:
         """Set the layout for the widget."""
-        state_layout = QHBoxLayout()
-        state_layout.addWidget(self.state_display)
-
         text_output_layout = QStackedLayout()
         text_output_layout.addWidget(self.debug_button)
         text_output_layout.addWidget(self.output_display)
         text_output_layout.setStackingMode(QStackedLayout.StackingMode.StackAll)
 
-        text_display_layout = QVBoxLayout()
-        text_display_layout.addLayout(state_layout)
-        text_display_layout.addLayout(text_output_layout)
-
-        main_layout = QHBoxLayout(self)
-        main_layout.addLayout(text_display_layout)
+        main_layout = QVBoxLayout(self)
+        main_layout.addWidget(self.state_display)
+        main_layout.addLayout(text_output_layout)
 
     def _start_worker(self) -> None:
         """Starts the Bluetooth listener worker."""

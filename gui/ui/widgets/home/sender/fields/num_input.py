@@ -1,12 +1,13 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QDoubleValidator, QIntValidator
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
 
 from robot import LineFollower
 from utils import (
+    FLOAT_MESSAGES,
     PARAM_MAX_VALUES,
     SERIAL_MESSAGE_SIZES,
-    Messages,
+    SerialMessage,
     SerialMessages,
     UIConstants,
 )
@@ -21,7 +22,6 @@ class NumInput(QWidget):
     #### Parameters:
     - `label (str)`: The label for the input field.
     - `message (SerialMessages)`: The type of message to be sent.
-    - `max_value (int)`: The maximum value allowed for the input.
 
     #### Properties:
     - `value (str)`: The current value of the input field.
@@ -42,6 +42,7 @@ class NumInput(QWidget):
     ):
         super().__init__()
         self._message = message
+        self._is_float = message in FLOAT_MESSAGES
         self._line_follower = LineFollower()
 
         self.setFixedHeight(UIConstants.ROW_HEIGHT)
@@ -79,10 +80,18 @@ class NumInput(QWidget):
         """Add an input field for the byte value."""
         self.input = QLineEdit()
         self.input.setFixedWidth(60)
-        self.input.setMaxLength(3)
-        self.input.setPlaceholderText(f"0-{self._max_value}")
-        self.input.setValidator(QIntValidator(0, self._max_value))
-        self.input.setToolTip(f"Enter a value between 0 and {self._max_value}")
+
+        if self._is_float:
+            self.input.setMaxLength(6)
+            self.input.setPlaceholderText(f"0-{self._max_value:.2f}")
+            self.input.setValidator(QDoubleValidator(0, self._max_value, 2))
+            self.input.setToolTip(f"Enter a value between 0 and {self._max_value:.2f}")
+        else:
+            self.input.setMaxLength(5)
+            self.input.setPlaceholderText(f"0-{self._max_value}")
+            self.input.setValidator(QIntValidator(0, self._max_value))
+            self.input.setToolTip(f"Enter a value between 0 and {self._max_value}")
+
         self.input.textChanged.connect(self._on_text_changed)
         self.input.returnPressed.connect(self._on_input)
 
@@ -95,17 +104,35 @@ class NumInput(QWidget):
 
     def _on_text_changed(self, text: str) -> None:
         """Handle text changes in the input field."""
-        if text.isdigit() and int(text) > self._max_value:
-            self.input.setText(f"{self._max_value}")
+        if not text:
+            return
+
+        if self._is_float:
+            try:
+                value = float(text)
+            except ValueError:
+                return
+
+            if value > self._max_value:
+                self.input.setText(f"{self._max_value:.2f}")
+
+        else:
+            if text.isdigit() and int(text) > self._max_value:
+                self.input.setText(f"{self._max_value}")
 
     def _on_input(self) -> None:
         """Handle the input value and send it to the robot."""
         value = self.input.text()
 
-        if not value.isdigit():
+        if not value:
             return
 
-        self._line_follower.send_message(Messages.from_int(self._message, int(value)))
+        if self._is_float:
+            value = float(value) * 100 + 0.5
+
+        value = int(value)
+
+        self._line_follower.send_message(SerialMessage.from_int(self._message, value))
 
     def _set_layout(self) -> None:
         """Set the layout for the widget."""

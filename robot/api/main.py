@@ -112,12 +112,14 @@ class BluetoothApi(QObject):
         Returns:
             bool: True if the connection was successful, False otherwise.
         """
+        print(f"Connecting to Bluetooth on port {self._com_port}...")
         try:
             self._bluetooth = serial.Serial(
                 self._com_port,
                 SerialConfig.BAUD_RATE,
                 timeout=SerialConfig.TIMEOUT,
             )
+            print("Bluetooth connected.")
             self.connection_change.emit()
         except serial.SerialException as e:
             print(f"Failed to connect to Bluetooth device: {e}")
@@ -133,6 +135,7 @@ class BluetoothApi(QObject):
             self._bluetooth.close()  # type: ignore[union-attr]
         self._bluetooth = None
 
+        print("Bluetooth disconnected.")
         self.connection_change.emit()
 
     def read_data(self) -> None:

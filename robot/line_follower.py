@@ -56,19 +56,27 @@ class LineFollower:
     #### Properties:
     - `is_running (bool)`: Indicates if the robot is currently running.
     - `bluetooth (BluetoothApi)`: Instance of BluetoothApi for Bluetooth communication.
-    - `kp (int | None)`: Proportional gain for PID controller.
-    - `ki (int | None)`: Integral gain for PID controller.
-    - `kd (int | None)`: Derivative gain for PID controller.
-    - `kff (int | None)`: Feedforward gain for PID controller.
-    - `kb (int | None)`: Brake gain for PID controller.
-    - `base_pwm (int | None)`: Base PWM value for motor control.
-    - `max_pwm (int | None)`: Maximum PWM value for motor control.
+    - `kp (int)`: Proportional gain for PID controller.
+    - `ki (int)`: Integral gain for PID controller.
+    - `kd (int)`: Derivative gain for PID controller.
+    - `kb (int)`: Brake gain for PID controller.
+    - `kff (int)`: Feedforward gain for PID controller.
+    - `acceleration (int)`: Acceleration value for PID controller.
+    - `alpha (float)`: Alpha value for PID controller.
+    - `clamp (int)`: Clamp value for PID controller.
+    - `base_pwm (int)`: Base PWM value for motor control.
+    - `max_pwm (int)`: Maximum PWM value for motor control.
     - `state (RobotStates | None)`: Current state of the robot.
     - `running_mode (RunningModes | None)`: Current running mode of the robot.
     - `stop_mode (StopModes | None)`: Current stop mode of the robot.
     - `laps (int)`: Number of laps completed.
     - `stop_time (int)`: Time to stop the robot.
     - `log_data (bool)`: Indicates if data logging is enabled.
+    - `turbine_pwm (int)`: Turbine PWM value for motor control.
+    - `speed_kp (int)`: Proportional gain for speed PID controller.
+    - `speed_ki (int)`: Integral gain for speed PID controller.
+    - `speed_kd (int)`: Derivative gain for speed PID controller
+    - `base_speed (float)`: Base speed for the robot.
 
     #### Methods:
     - `update_config(message: SerialMessages, value: int) -> None`: Updates the configuration of the robot based on the message received.
@@ -87,13 +95,16 @@ class LineFollower:
 
         self._signal_handler = SignalHandler()
 
-        self._kp = None
-        self._ki = None
-        self._kd = None
-        self._kff = None
-        self._kb = None
-        self._base_pwm = None
-        self._max_pwm = None
+        self._kp = 0
+        self._ki = 0
+        self._kd = 0
+        self._kff = 0
+        self._kb = 0
+        self._acceleration = 0
+        self._alpha = 0
+        self._clamp = 0
+        self._base_pwm = 0
+        self._max_pwm = 0
         self._state = None
         self._running_mode = None
         self._stop_mode = None
@@ -101,6 +112,10 @@ class LineFollower:
         self._stop_time = 0
         self._log_data = False
         self._turbine_pwm = 0
+        self._speed_kp = 0
+        self._speed_ki = 0
+        self._speed_kd = 0
+        self._base_speed = 0
 
         self._bluetooth = BluetoothApi()
 
@@ -110,8 +125,9 @@ class LineFollower:
             SerialMessages.PID_KP: self._update_kp,
             SerialMessages.PID_KI: self._update_ki,
             SerialMessages.PID_KD: self._update_kd,
-            SerialMessages.PID_KFF: self._update_kff,
             SerialMessages.PID_KB: self._update_kb,
+            SerialMessages.PID_KFF: self._update_kff,
+            SerialMessages.PID_ACCEL: self._update_acceleration,
             SerialMessages.PID_BASE_PWM: self._update_base_pwm,
             SerialMessages.PID_MAX_PWM: self._update_max_pwm,
             SerialMessages.STATE: self._update_state,
@@ -121,6 +137,12 @@ class LineFollower:
             SerialMessages.STOP_TIME: self._update_stop_time,
             SerialMessages.LOG_DATA: self._set_log_data,
             SerialMessages.TURBINE_PWM: self._update_turbine_pwm,
+            SerialMessages.SPEED_KP: self._update_speed_kp,
+            SerialMessages.SPEED_KI: self._update_speed_ki,
+            SerialMessages.SPEED_KD: self._update_speed_kd,
+            SerialMessages.BASE_SPEED: self._update_base_speed,
+            SerialMessages.PID_ALPHA: self._update_alpha,
+            SerialMessages.PID_CLAMP: self._update_clamp,
         }
 
         self._initialized = True
@@ -136,37 +158,47 @@ class LineFollower:
         return self._bluetooth
 
     @property
-    def kp(self) -> int | None:
+    def kp(self) -> int:
         """Proportional gain for PID controller."""
         return self._kp
 
     @property
-    def ki(self) -> int | None:
+    def ki(self) -> int:
         """Integral gain for PID controller."""
         return self._ki
 
     @property
-    def kd(self) -> int | None:
+    def kd(self) -> int:
         """Derivative gain for PID controller."""
         return self._kd
 
     @property
-    def kff(self) -> int | None:
+    def kff(self) -> int:
         """Feedforward gain for PID controller."""
         return self._kff
 
     @property
-    def kb(self) -> int | None:
+    def kb(self) -> int:
         """Brake gain for PID controller."""
         return self._kb
 
     @property
-    def base_pwm(self) -> int | None:
+    def alpha(self) -> float:
+        """Alpha value for PID controller."""
+        return self._alpha
+
+    @property
+    def clamp(self) -> int:
+        """Clamp value for PID controller."""
+        return self._clamp
+
+    @property
+    def base_pwm(self) -> int:
         """Base PWM value for motor control."""
         return self._base_pwm
 
     @property
-    def max_pwm(self) -> int | None:
+    def max_pwm(self) -> int:
         """Maximum PWM value for motor control."""
         return self._max_pwm
 
@@ -201,9 +233,29 @@ class LineFollower:
         return self._log_data
 
     @property
-    def turbine_pwm(self) -> int | None:
+    def turbine_pwm(self) -> int:
         """Turbine PWM value for motor control."""
         return self._turbine_pwm
+
+    @property
+    def speed_kp(self) -> int:
+        """Proportional gain for speed PID controller."""
+        return self._speed_kp
+
+    @property
+    def speed_ki(self) -> int:
+        """Integral gain for speed PID controller."""
+        return self._speed_ki
+
+    @property
+    def speed_kd(self) -> int:
+        """Derivative gain for speed PID controller."""
+        return self._speed_kd
+
+    @property
+    def base_speed(self) -> float:
+        """Base speed for the robot."""
+        return self._base_speed
 
     def send_message(self, message: SerialMessage) -> None:
         """
@@ -288,6 +340,31 @@ class LineFollower:
         self._kb = kb
         return True
 
+    def _update_acceleration(self, acceleration: int) -> bool:
+        """Updates the acceleration value for PID controller."""
+        if self._acceleration == acceleration:
+            return False
+
+        self._acceleration = acceleration
+        return True
+
+    def _update_alpha(self, alpha: int) -> bool:
+        """Updates the alpha value for PID controller."""
+        new_alpha = float(alpha) / 100.0
+        if self._alpha == new_alpha:
+            return False
+
+        self._alpha = new_alpha
+        return True
+
+    def _update_clamp(self, clamp: int) -> bool:
+        """Updates the clamp value for PID controller."""
+        if self._clamp == clamp:
+            return False
+
+        self._clamp = clamp
+        return True
+
     def _update_base_pwm(self, base_pwm: int) -> bool:
         """Updates the base PWM value for motor control."""
         if self._base_pwm == base_pwm:
@@ -362,4 +439,37 @@ class LineFollower:
             return False
 
         self._turbine_pwm = turbine_pwm
+        return True
+
+    def _update_speed_kp(self, kp: int) -> bool:
+        """Updates the proportional gain for speed PID controller."""
+        if self._speed_kp == kp:
+            return False
+
+        self._speed_kp = kp
+        return True
+
+    def _update_speed_ki(self, ki: int) -> bool:
+        """Updates the integral gain for speed PID controller."""
+        if self._speed_ki == ki:
+            return False
+
+        self._speed_ki = ki
+        return True
+
+    def _update_speed_kd(self, kd: int) -> bool:
+        """Updates the derivative gain for speed PID controller."""
+        if self._speed_kd == kd:
+            return False
+
+        self._speed_kd = kd
+        return True
+
+    def _update_base_speed(self, base_speed: int) -> bool:
+        """Updates the base speed for the robot."""
+        new_speed = float(base_speed) / 100.0
+        if self._base_speed == new_speed:
+            return False
+
+        self._base_speed = new_speed
         return True

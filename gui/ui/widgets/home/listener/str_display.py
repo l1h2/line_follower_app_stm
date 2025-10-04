@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from robot import LineFollower
 from utils import (
+    FLOAT_MESSAGES,
     Booleans,
     RobotStates,
     RunningModes,
@@ -20,6 +21,7 @@ class StrDisplay(QWidget):
     of a parameter in the robot.
 
     #### Parameters:
+    - `message (SerialMessages)`: The type of message to be displayed.
     - `label (str)`: The label for the display field.
     - `align (Qt.AlignmentFlag)`: The alignment of the label and value display.
 
@@ -100,5 +102,7 @@ class StrDisplay(QWidget):
             str_value = StopModes(value).name
         elif message == SerialMessages.LOG_DATA:
             str_value = Booleans(value).name
+        elif message in FLOAT_MESSAGES:
+            str_value = str(value / 100)
 
         self.value.setText(str_value)

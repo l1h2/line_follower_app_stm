@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
 from utils import Booleans, RunningModes, SerialMessages, StopModes, UIConstants
 
-from ..listener.str_display import StrDisplay
+from ...listener.str_display import StrDisplay
 from .mode_select import ModeSelect
 from .num_input import NumInput
 
@@ -69,4 +69,4 @@ class ParamSetter(QWidget):
         layout = QHBoxLayout(self)
         layout.addWidget(self.input)
         layout.addWidget(self.display)
-        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)

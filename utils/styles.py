@@ -33,3 +33,8 @@ class Styles:
             border: 1px solid darkgreen;
         }
     """
+
+    TITTLES = """
+        font-weight: bold;
+        font-size: 16px;
+    """
