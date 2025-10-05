@@ -45,7 +45,7 @@ class SpeedSender(QWidget):
         self.kp_input = ParamSetter("Speed KP:", SerialMessages.SPEED_KP)
         self.ki_input = ParamSetter("Speed KI:", SerialMessages.SPEED_KI)
         self.kd_input = ParamSetter("Speed KD:", SerialMessages.SPEED_KD)
-        self.base_speed = ParamSetter("Base Speed:", SerialMessages.BASE_SPEED)
+        self.base_speed = ParamSetter("Base Speed (cm/s):", SerialMessages.BASE_SPEED)
 
     def _add_tittle(self) -> None:
         """Add title to the GeneralSender widget."""

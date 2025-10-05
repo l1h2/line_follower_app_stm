@@ -1,12 +1,12 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHBoxLayout, QStackedLayout, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QStackedLayout, QVBoxLayout, QWidget
 
 from gui.workers import BluetoothListenerWorker
 from utils import SerialMessage, SerialMessages, app_configs
 
 from .debug_button import DebugButton
 from .str_display import StrDisplay
-from .text_display import TextDisplay
+from .text_display import TextDisplayContainer
 
 
 class ListenerWidget(QWidget):
@@ -39,7 +39,7 @@ class ListenerWidget(QWidget):
             SerialMessages.STATE, "STATE:", Qt.AlignmentFlag.AlignCenter
         )
 
-        self.output_display = TextDisplay(parent=self)
+        self.output_display = TextDisplayContainer(parent=self)
         self.debug_button = DebugButton(self)
 
     def _set_layout(self) -> None:

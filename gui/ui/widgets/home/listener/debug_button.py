@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 from utils import Styles, app_configs
@@ -12,18 +12,12 @@ class DebugButton(QWidget):
 
     #### Parameters:
     - `parent (QWidget | None)`: The parent widget of the DebugButton.
-
-    #### Signals:
-    - `debug_state_changed (bool)`: Emitted when the debug button is clicked, indicating the new debug state.
     """
-
-    debug_state_changed = pyqtSignal(bool)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
 
         self.setFixedHeight(50)
-        self.setContentsMargins(0, 0, 20, 0)
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -54,3 +48,4 @@ class DebugButton(QWidget):
         main_layout = QHBoxLayout(self)
         main_layout.addWidget(self._debug_button)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        main_layout.setContentsMargins(0, 20, 40, 0)

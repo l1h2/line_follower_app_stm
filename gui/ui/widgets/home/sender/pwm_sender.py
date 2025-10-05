@@ -58,7 +58,7 @@ class PwmSender(QWidget):
         self.kff_input = ParamSetter("KFF:", SerialMessages.PID_KFF)
         self.kb_input = ParamSetter("KB:", SerialMessages.PID_KB)
         self.accel_input = ParamSetter("Acceleration:", SerialMessages.PID_ACCEL)
-        self.alpha_input = ParamSetter("Alpha:", SerialMessages.PID_ALPHA)
+        self.alpha_input = ParamSetter("Alpha (%):", SerialMessages.PID_ALPHA)
         self.clamp_input = ParamSetter("Clamp:", SerialMessages.PID_CLAMP)
         self.base_pwm_input = ParamSetter("Base PWM:", SerialMessages.PID_BASE_PWM)
 

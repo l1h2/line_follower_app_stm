@@ -1,8 +1,49 @@
 import time
 
-from PyQt6.QtWidgets import QTextEdit, QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHBoxLayout, QTextEdit, QWidget
 
 from utils import UIConstants
+
+
+class TextDisplayContainer(QWidget):
+    """
+    ### TextDisplayContainer Widget
+
+    A container widget for the TextDisplay widget. It provides a layout to hold the TextDisplay.
+
+    #### Parameters:
+    - `parent (QWidget | None)`: The parent widget of the TextDisplayContainer.
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+
+        self._init_ui()
+
+    def print_text(self, text: str) -> None:
+        """
+        Print text to the QTextEdit widget displaying the text in a scrollable area.
+
+        Args:
+            text (str): The text to be displayed.
+        """
+        self._text_display.print_text(text)
+
+    def _init_ui(self) -> None:
+        """Initialize the UI components of the TextDisplayContainer widget."""
+        self._add_widgets()
+        self._set_layout()
+
+    def _add_widgets(self) -> None:
+        """Add widgets to the TextDisplayContainer widget."""
+        self._text_display = TextDisplay(parent=self)
+
+    def _set_layout(self) -> None:
+        """Set the layout for the TextDisplayContainer widget."""
+        main_layout = QHBoxLayout(self)
+        main_layout.addWidget(self._text_display)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
 
 class TextDisplay(QTextEdit):

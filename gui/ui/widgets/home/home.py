@@ -39,11 +39,10 @@ class HomeWidget(QWidget):
 
     def _set_layout(self) -> None:
         """Set the layout for the home widget."""
-        main_layout = QVBoxLayout(self)
-
         display_layout = QHBoxLayout()
         display_layout.addWidget(self.sender_widget)
         display_layout.addWidget(self.listener_widget)
 
+        main_layout = QVBoxLayout(self)
         main_layout.addLayout(display_layout)
         main_layout.addWidget(self.connector_widget)

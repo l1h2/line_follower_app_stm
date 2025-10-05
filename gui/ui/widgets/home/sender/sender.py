@@ -40,8 +40,8 @@ class SenderWidget(QWidget):
     def _add_send_all_button(self) -> None:
         """Add a button to send all values to the robot."""
         self.send_all_button = QPushButton("Send All")
-        self.send_all_button.setFixedHeight(30)
-        self.send_all_button.setFixedWidth(400)
+        self.send_all_button.setFixedHeight(60)
+        self.send_all_button.setFixedWidth(600)
         self.send_all_button.setToolTip("Send all values to the robot")
         self.send_all_button.setStyleSheet("background-color: #4CAF50; color: white;")
         self.send_all_button.clicked.connect(self._on_send_all)
