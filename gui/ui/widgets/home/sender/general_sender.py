@@ -33,6 +33,7 @@ class GeneralSender(QWidget):
         self.turbine_pwm_input.send_value()
         self.laps_input.send_value()
         self.stop_time_input.send_value()
+        self.stop_distance_input.send_value()
 
         self.running_mode_input.send_value()
         self.stop_mode_input.send_value()
@@ -50,6 +51,9 @@ class GeneralSender(QWidget):
         self.turbine_pwm_input = ParamSetter("Turbine PWM:", SerialMessages.TURBINE_PWM)
         self.laps_input = ParamSetter("Laps:", SerialMessages.LAPS)
         self.stop_time_input = ParamSetter("Stop Time (s):", SerialMessages.STOP_TIME)
+        self.stop_distance_input = ParamSetter(
+            "Stop Distance (cm):", SerialMessages.STOP_DISTANCE
+        )
 
         self.running_mode_input = ParamSetter(
             "Running Mode:", SerialMessages.RUNNING_MODE
@@ -69,11 +73,14 @@ class GeneralSender(QWidget):
         first_column_layout.addWidget(self.turbine_pwm_input)
         first_column_layout.addWidget(self.laps_input)
         first_column_layout.addWidget(self.stop_time_input)
+        first_column_layout.addWidget(self.stop_distance_input)
+        first_column_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         second_column_layout = QVBoxLayout()
         second_column_layout.addWidget(self.running_mode_input)
         second_column_layout.addWidget(self.stop_mode_input)
         second_column_layout.addWidget(self.log_data_input)
+        second_column_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         inputs_layout = QHBoxLayout()
         inputs_layout.addLayout(first_column_layout)

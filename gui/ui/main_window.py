@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
     def _set_window(self) -> None:
         """Set the main window properties."""
         self.setWindowTitle("Line Follower App")
-        self.resize(1600, 900)
+        self.resize(1600, 960)
 
     def _set_main_widget(self) -> None:
         """Set the main widget for the main window."""

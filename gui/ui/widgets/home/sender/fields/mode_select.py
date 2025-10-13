@@ -69,7 +69,7 @@ class ModeSelect(QWidget):
     def _add_label(self, label: str) -> None:
         """Add a label to the widget."""
         self.label = QLabel(label)
-        self.label.setFixedWidth(90)
+        self.label.setFixedWidth(105)
 
     def _add_options(self) -> None:
         """Add a combo box for selecting the mode."""

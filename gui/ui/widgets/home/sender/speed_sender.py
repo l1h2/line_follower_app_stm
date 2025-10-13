@@ -32,6 +32,7 @@ class SpeedSender(QWidget):
         self.ki_input.send_value()
         self.kd_input.send_value()
         self.base_speed.send_value()
+        self.lookahead.send_value()
 
     def _init_ui(self) -> None:
         """Initialize the UI components of the Speed sender widget."""
@@ -46,6 +47,7 @@ class SpeedSender(QWidget):
         self.ki_input = ParamSetter("Speed KI:", SerialMessages.SPEED_KI)
         self.kd_input = ParamSetter("Speed KD:", SerialMessages.SPEED_KD)
         self.base_speed = ParamSetter("Base Speed (cm/s):", SerialMessages.BASE_SPEED)
+        self.lookahead = ParamSetter("Lookahead (cm):", SerialMessages.LOOKAHEAD)
 
     def _add_tittle(self) -> None:
         """Add title to the GeneralSender widget."""
@@ -61,5 +63,6 @@ class SpeedSender(QWidget):
         main_layout.addWidget(self.ki_input)
         main_layout.addWidget(self.kd_input)
         main_layout.addWidget(self.base_speed)
+        main_layout.addWidget(self.lookahead)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         main_layout.setContentsMargins(0, 0, 0, 0)

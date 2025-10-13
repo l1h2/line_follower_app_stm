@@ -74,7 +74,7 @@ class NumInput(QWidget):
     def _add_label(self, label: str) -> None:
         """Add a label to the widget."""
         self.label = QLabel(label)
-        self.label.setFixedWidth(90)
+        self.label.setFixedWidth(105)
 
     def _add_input(self) -> None:
         """Add an input field for the byte value."""

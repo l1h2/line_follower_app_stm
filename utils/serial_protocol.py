@@ -34,6 +34,9 @@ class SerialMessages(IntEnum):
     BASE_SPEED = 21
     PID_ALPHA = 22
     PID_CLAMP = 23
+    STOP_DISTANCE = 24
+    OPERATION_DATA = 25
+    LOOKAHEAD = 26
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
@@ -61,6 +64,9 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.BASE_SPEED: 2,
     SerialMessages.PID_ALPHA: 2,
     SerialMessages.PID_CLAMP: 2,
+    SerialMessages.STOP_DISTANCE: 2,
+    SerialMessages.OPERATION_DATA: 8,
+    SerialMessages.LOOKAHEAD: 1,
 }
 
 FLOAT_MESSAGES = {SerialMessages.BASE_SPEED, SerialMessages.PID_ALPHA}
@@ -80,10 +86,14 @@ class SerialMessage:
 
     ### Properties:
     - `frame (bytes)`: The byte frame representation of the message.
+    - `string (str)`: String representation of the message.
 
     #### Methods:
     - `from_frame(frame: bytes) -> "SerialMessage"`: Creates a SerialMessage from a byte frame.
     - `from_message(message: SerialMessages, payload: bytes, checksum: int) -> "SerialMessage"`: Creates a SerialMessage from its components.
+    - `from_int(message: SerialMessages, value: int) -> "SerialMessage"`: Create a SerialMessage from an integer value.
+    - `from_bool(message: SerialMessages, value: bool) -> "SerialMessage"`: Create a SerialMessage from a boolean value.
+    - `from_float(message: SerialMessages, value: float) -> "SerialMessage"`: Create a SerialMessage from a float value.
     """
 
     message: SerialMessages
@@ -308,3 +318,67 @@ class SerialParser:
         data = self._log_buffer.decode("latin-1")
         self._log_buffer.clear()
         self._on_log(data)
+
+
+class OperationData:
+    """
+    ### Parser for operation data received from the robot.
+
+    Parses the operation data payload received from the robot and provides
+    access to its components.
+
+    #### Parameters:
+    - `payload (bytes | None)`: The payload bytes containing the operation data. If `None` or invalid, initializes all attributes to zero.
+
+    #### Attributes:
+    - `central_sensors_byte (int)`: Byte representing the state of central sensors.
+    - `left_sensor (int)`: State of the left sensor (0 or 1).
+    - `right_sensor (int)`: State of the right sensor (0 or 1).
+    - `sensors (list[int])`: List of sensor states in the order [left, central sensors..., right].
+    - `x (int)`: X coordinate of the robot.
+    - `y (int)`: Y coordinate of the robot.
+    - `heading (int)`: Heading angle of the robot.
+
+    #### Methods:
+    - `update(payload: bytes) -> None`: Updates the operation data with a new payload
+    """
+
+    def __init__(self, payload: bytes | None = None) -> None:
+        if payload is None or len(payload) != 8:
+            self._empty_init()
+            return
+
+        self.update(payload)
+
+    def update(self, payload: bytes) -> None:
+        """
+        Updates the operation data with a new payload.
+
+        Args:
+            payload (bytes): The new payload containing the operation data.
+        """
+        self.central_sensors_byte = payload[0]
+        self.left_sensor = payload[1] & 0x01
+        self.right_sensor = (payload[1] >> 1) & 0x01
+        self._organize_sensor_array()
+
+        self.x = int.from_bytes(payload[2:4], byteorder="little", signed=True)
+        self.y = int.from_bytes(payload[4:6], byteorder="little", signed=True)
+        self.heading = int.from_bytes(payload[6:8], byteorder="little", signed=True)
+
+    def _empty_init(self) -> None:
+        """Initializes all attributes to zero."""
+        self.central_sensors_byte = 0
+        self.left_sensor = 0
+        self.right_sensor = 0
+        self.sensors = [0] * 10
+        self.x = 0
+        self.y = 0
+        self.heading = 0
+
+    def _organize_sensor_array(self) -> None:
+        """Organizes the sensor array in a specific order."""
+        self.sensors = [self.left_sensor]
+        for i in range(8):
+            self.sensors.append((self.central_sensors_byte >> i) & 0x01)
+        self.sensors.append(self.right_sensor)

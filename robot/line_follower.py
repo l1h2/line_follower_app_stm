@@ -5,6 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from utils import RobotStates, RunningModes, SerialMessage, SerialMessages, StopModes
 
 from .api import BluetoothApi
+from .track_mapper import Mapper
 
 
 class SignalHandler(QObject):
@@ -71,12 +72,14 @@ class LineFollower:
     - `stop_mode (StopModes | None)`: Current stop mode of the robot.
     - `laps (int)`: Number of laps completed.
     - `stop_time (int)`: Time to stop the robot.
+    - `stop_distance (int)`: Distance to stop the robot.
     - `log_data (bool)`: Indicates if data logging is enabled.
     - `turbine_pwm (int)`: Turbine PWM value for motor control.
     - `speed_kp (int)`: Proportional gain for speed PID controller.
     - `speed_ki (int)`: Integral gain for speed PID controller.
     - `speed_kd (int)`: Derivative gain for speed PID controller
     - `base_speed (float)`: Base speed for the robot.
+    - `lookahead (int)`: Lookahead distance for the robot.
 
     #### Methods:
     - `update_config(message: SerialMessages, value: int) -> None`: Updates the configuration of the robot based on the message received.
@@ -110,14 +113,17 @@ class LineFollower:
         self._stop_mode = None
         self._laps = 0
         self._stop_time = 0
+        self._stop_distance = 0
         self._log_data = False
         self._turbine_pwm = 0
         self._speed_kp = 0
         self._speed_ki = 0
         self._speed_kd = 0
         self._base_speed = 0
+        self._lookahead = 0
 
         self._bluetooth = BluetoothApi()
+        self._mapper = Mapper()
 
         self._bluetooth.serial_output.connect(self._handle_serial_message)
 
@@ -135,6 +141,7 @@ class LineFollower:
             SerialMessages.STOP_MODE: self._update_stop_mode,
             SerialMessages.LAPS: self._update_laps,
             SerialMessages.STOP_TIME: self._update_stop_time,
+            SerialMessages.STOP_DISTANCE: self._update_stop_distance,
             SerialMessages.LOG_DATA: self._set_log_data,
             SerialMessages.TURBINE_PWM: self._update_turbine_pwm,
             SerialMessages.SPEED_KP: self._update_speed_kp,
@@ -143,6 +150,7 @@ class LineFollower:
             SerialMessages.BASE_SPEED: self._update_base_speed,
             SerialMessages.PID_ALPHA: self._update_alpha,
             SerialMessages.PID_CLAMP: self._update_clamp,
+            SerialMessages.LOOKAHEAD: self._update_lookahead,
         }
 
         self._initialized = True
@@ -228,6 +236,11 @@ class LineFollower:
         return self._stop_time
 
     @property
+    def stop_distance(self) -> int:
+        """Distance to stop the robot."""
+        return self._stop_distance
+
+    @property
     def log_data(self) -> bool:
         """Indicates if data logging is enabled."""
         return self._log_data
@@ -256,6 +269,11 @@ class LineFollower:
     def base_speed(self) -> float:
         """Base speed for the robot."""
         return self._base_speed
+
+    @property
+    def lookahead(self) -> int:
+        """Lookahead distance for the robot."""
+        return self._lookahead
 
     def send_message(self, message: SerialMessage) -> None:
         """
@@ -287,6 +305,10 @@ class LineFollower:
     def _handle_serial_message(self, message: SerialMessage) -> None:
         """Handles incoming serial messages and updates config params."""
         if message.message not in self._config_map:
+            return
+
+        if message.message == SerialMessages.OPERATION_DATA:
+            self._mapper.handle_operation_data(message.payload)
             return
 
         value = int.from_bytes(message.payload, byteorder="little")
@@ -424,6 +446,14 @@ class LineFollower:
         self._stop_time = stop_time
         return True
 
+    def _update_stop_distance(self, stop_distance: int) -> bool:
+        """Updates the distance to stop the robot."""
+        if self._stop_distance == stop_distance:
+            return False
+
+        self._stop_distance = stop_distance
+        return True
+
     def _set_log_data(self, log_data: int) -> bool:
         """Sets the log data flag."""
         new_bool = log_data == 1
@@ -472,4 +502,12 @@ class LineFollower:
             return False
 
         self._base_speed = new_speed
+        return True
+
+    def _update_lookahead(self, lookahead: int) -> bool:
+        """Updates the lookahead distance for the robot."""
+        if self._lookahead == lookahead:
+            return False
+
+        self._lookahead = lookahead
         return True

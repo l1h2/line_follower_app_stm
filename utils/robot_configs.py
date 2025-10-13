@@ -30,6 +30,7 @@ class StopModes(IntEnum):
     NONE = 0
     TIME = 1
     LAPS = 2
+    DISTANCE = 3
 
 
 PARAM_MAX_VALUES = {

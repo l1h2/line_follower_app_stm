@@ -60,7 +60,7 @@ class ParamSetter(QWidget):
         else:
             self.input = NumInput(self._label, self._message)
 
-        self.input.setFixedWidth(300)
+        self.input.setFixedWidth(305)
 
         self.display = StrDisplay(self._message)
 
