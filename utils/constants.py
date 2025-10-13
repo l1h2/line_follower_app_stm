@@ -8,6 +8,7 @@ class Files:
     TIMESTAMP_FILE = "data/timestamps.txt"
     TEXT_FILE = "data/serial_data_log.txt"
     SENSOR_DATA = "data/sensors.csv"
+    ENCODER_DATA = "data/encoder.csv"
 
 
 class CsvHeaders:

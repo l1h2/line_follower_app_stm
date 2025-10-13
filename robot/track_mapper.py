@@ -15,6 +15,7 @@ class Mapper:
 
     def __init__(self) -> None:
         self._operation_data = OperationData()
+        self._last_encoder_update = OperationData()
 
     def handle_operation_data(self, payload: bytes) -> None:
         """
@@ -27,8 +28,24 @@ class Mapper:
             f.write(payload)
 
         self._operation_data.update(payload)
+        self._write_csv(Files.SENSOR_DATA)
+        self._handle_encoder_update(payload)
 
-        with open(Files.SENSOR_DATA, "a", newline="") as f:
+    def _handle_encoder_update(self, payload: bytes) -> None:
+        """Updates encoder file if there is a change in position or heading."""
+        if (
+            self._operation_data.x == self._last_encoder_update.x
+            and self._operation_data.y == self._last_encoder_update.y
+            and self._operation_data.heading == self._last_encoder_update.heading
+        ):
+            return
+
+        self._last_encoder_update.update(payload)
+        self._write_csv(Files.ENCODER_DATA)
+
+    def _write_csv(self, filename: str) -> None:
+        """Writes the operation data to a CSV file."""
+        with open(filename, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(
                 [

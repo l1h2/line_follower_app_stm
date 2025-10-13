@@ -62,5 +62,5 @@ def plot_path(df: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    df = pd.read_csv(Files.TEXT_FILE)
+    df = pd.read_csv(Files.ENCODER_DATA)
     plot_path(df)
