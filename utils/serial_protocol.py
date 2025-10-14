@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 SERIAL_FRAME_START = 0xAA
-SERIAL_MESSAGE_MAX_PAYLOAD = 4
+SERIAL_MESSAGE_MAX_PAYLOAD = 8
 SERIAL_MESSAGE_MINIMUM_SIZE = 3  # Start + ID + Checksum
 
 
@@ -37,6 +37,7 @@ class SerialMessages(IntEnum):
     STOP_DISTANCE = 24
     OPERATION_DATA = 25
     LOOKAHEAD = 26
+    SPEED_KFF = 27
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
@@ -58,8 +59,8 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.PID_BASE_PWM: 2,
     SerialMessages.PID_MAX_PWM: 2,
     SerialMessages.TURBINE_PWM: 2,
-    SerialMessages.SPEED_KP: 1,
-    SerialMessages.SPEED_KI: 1,
+    SerialMessages.SPEED_KP: 2,
+    SerialMessages.SPEED_KI: 2,
     SerialMessages.SPEED_KD: 2,
     SerialMessages.BASE_SPEED: 2,
     SerialMessages.PID_ALPHA: 2,
@@ -67,6 +68,7 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.STOP_DISTANCE: 2,
     SerialMessages.OPERATION_DATA: 8,
     SerialMessages.LOOKAHEAD: 1,
+    SerialMessages.SPEED_KFF: 2,
 }
 
 FLOAT_MESSAGES = {SerialMessages.BASE_SPEED, SerialMessages.PID_ALPHA}

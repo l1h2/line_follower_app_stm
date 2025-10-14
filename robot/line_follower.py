@@ -78,6 +78,7 @@ class LineFollower:
     - `speed_kp (int)`: Proportional gain for speed PID controller.
     - `speed_ki (int)`: Integral gain for speed PID controller.
     - `speed_kd (int)`: Derivative gain for speed PID controller
+    - `speed_kff (int)`: Feedforward gain for speed PID controller.
     - `base_speed (float)`: Base speed for the robot.
     - `lookahead (int)`: Lookahead distance for the robot.
 
@@ -119,6 +120,7 @@ class LineFollower:
         self._speed_kp = 0
         self._speed_ki = 0
         self._speed_kd = 0
+        self._speed_kff = 0
         self._base_speed = 0
         self._lookahead = 0
 
@@ -147,6 +149,7 @@ class LineFollower:
             SerialMessages.SPEED_KP: self._update_speed_kp,
             SerialMessages.SPEED_KI: self._update_speed_ki,
             SerialMessages.SPEED_KD: self._update_speed_kd,
+            SerialMessages.SPEED_KFF: self._update_speed_kff,
             SerialMessages.BASE_SPEED: self._update_base_speed,
             SerialMessages.PID_ALPHA: self._update_alpha,
             SerialMessages.PID_CLAMP: self._update_clamp,
@@ -264,6 +267,11 @@ class LineFollower:
     def speed_kd(self) -> int:
         """Derivative gain for speed PID controller."""
         return self._speed_kd
+
+    @property
+    def speed_kff(self) -> int:
+        """Feedforward gain for speed PID controller."""
+        return self._speed_kff
 
     @property
     def base_speed(self) -> float:
@@ -493,6 +501,14 @@ class LineFollower:
             return False
 
         self._speed_kd = kd
+        return True
+
+    def _update_speed_kff(self, kff: int) -> bool:
+        """Updates the feedforward gain for speed PID controller."""
+        if self._speed_kff == kff:
+            return False
+
+        self._speed_kff = kff
         return True
 
     def _update_base_speed(self, base_speed: int) -> bool:

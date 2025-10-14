@@ -31,6 +31,7 @@ class SpeedSender(QWidget):
         self.kp_input.send_value()
         self.ki_input.send_value()
         self.kd_input.send_value()
+        self.kff_input.send_value()
         self.base_speed.send_value()
         self.lookahead.send_value()
 
@@ -46,6 +47,7 @@ class SpeedSender(QWidget):
         self.kp_input = ParamSetter("Speed KP:", SerialMessages.SPEED_KP)
         self.ki_input = ParamSetter("Speed KI:", SerialMessages.SPEED_KI)
         self.kd_input = ParamSetter("Speed KD:", SerialMessages.SPEED_KD)
+        self.kff_input = ParamSetter("Speed KFF:", SerialMessages.SPEED_KFF)
         self.base_speed = ParamSetter("Base Speed (cm/s):", SerialMessages.BASE_SPEED)
         self.lookahead = ParamSetter("Lookahead (cm):", SerialMessages.LOOKAHEAD)
 
@@ -62,6 +64,7 @@ class SpeedSender(QWidget):
         main_layout.addWidget(self.kp_input)
         main_layout.addWidget(self.ki_input)
         main_layout.addWidget(self.kd_input)
+        main_layout.addWidget(self.kff_input)
         main_layout.addWidget(self.base_speed)
         main_layout.addWidget(self.lookahead)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
