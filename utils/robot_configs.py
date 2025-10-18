@@ -41,4 +41,5 @@ PARAM_MAX_VALUES = {
     SerialMessages.STOP_TIME: 180,
     SerialMessages.BASE_SPEED: 635,
     SerialMessages.PID_ALPHA: 100,
+    SerialMessages.SPEED_KI: 6,
 }

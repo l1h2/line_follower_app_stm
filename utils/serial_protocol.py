@@ -11,37 +11,39 @@ class SerialMessages(IntEnum):
     """Enumeration of serial message types."""
 
     INVALID_MESSAGE = 0
-    START = 1
-    STOP = 2
-    STATE = 3
-    RUNNING_MODE = 4
-    STOP_MODE = 5
-    LAPS = 6
-    STOP_TIME = 7
-    LOG_DATA = 8
-    PID_KP = 9
-    PID_KI = 10
-    PID_KD = 11
-    PID_KB = 12
-    PID_KFF = 13
-    PID_ACCEL = 14
-    PID_BASE_PWM = 15
-    PID_MAX_PWM = 16
-    TURBINE_PWM = 17
-    SPEED_KP = 18
-    SPEED_KI = 19
-    SPEED_KD = 20
-    BASE_SPEED = 21
-    PID_ALPHA = 22
-    PID_CLAMP = 23
-    STOP_DISTANCE = 24
-    OPERATION_DATA = 25
-    LOOKAHEAD = 26
-    SPEED_KFF = 27
+    PING = 1
+    START = 2
+    STOP = 3
+    STATE = 4
+    RUNNING_MODE = 5
+    STOP_MODE = 6
+    LAPS = 7
+    STOP_TIME = 8
+    STOP_DISTANCE = 9
+    LOG_DATA = 10
+    PID_KP = 11
+    PID_KI = 12
+    PID_KD = 13
+    PID_KB = 14
+    PID_KFF = 15
+    PID_ALPHA = 16
+    PID_CLAMP = 17
+    PID_ACCEL = 18
+    PID_BASE_PWM = 19
+    PID_MAX_PWM = 20
+    TURBINE_PWM = 21
+    SPEED_KP = 22
+    SPEED_KI = 23
+    SPEED_KD = 24
+    SPEED_KFF = 25
+    BASE_SPEED = 26
+    LOOKAHEAD = 27
+    OPERATION_DATA = 28
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.INVALID_MESSAGE: 0,
+    SerialMessages.PING: 0,
     SerialMessages.START: 0,
     SerialMessages.STOP: 0,
     SerialMessages.STATE: 1,
@@ -71,7 +73,15 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.SPEED_KFF: 2,
 }
 
-FLOAT_MESSAGES = {SerialMessages.BASE_SPEED, SerialMessages.PID_ALPHA}
+FLOAT_MESSAGES = {
+    SerialMessages.BASE_SPEED,
+    SerialMessages.PID_ALPHA,
+}
+
+# Uses 4 digits of precision for float representation
+EXTENDED_FLOAT_MESSAGES = {
+    SerialMessages.SPEED_KI,
+}
 
 
 @dataclass

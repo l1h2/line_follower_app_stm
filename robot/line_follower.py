@@ -76,7 +76,7 @@ class LineFollower:
     - `log_data (bool)`: Indicates if data logging is enabled.
     - `turbine_pwm (int)`: Turbine PWM value for motor control.
     - `speed_kp (int)`: Proportional gain for speed PID controller.
-    - `speed_ki (int)`: Integral gain for speed PID controller.
+    - `speed_ki (float)`: Integral gain for speed PID controller.
     - `speed_kd (int)`: Derivative gain for speed PID controller
     - `speed_kff (int)`: Feedforward gain for speed PID controller.
     - `base_speed (float)`: Base speed for the robot.
@@ -259,7 +259,7 @@ class LineFollower:
         return self._speed_kp
 
     @property
-    def speed_ki(self) -> int:
+    def speed_ki(self) -> float:
         """Integral gain for speed PID controller."""
         return self._speed_ki
 
@@ -322,11 +322,11 @@ class LineFollower:
         value = int.from_bytes(message.payload, byteorder="little")
         changed = self._config_map[message.message](value)
 
-        if not changed:
-            return
-
         if message.message == SerialMessages.STATE:
             self._signal_handler.signal_state_changed(self._state)  # type: ignore
+
+        if not changed:
+            return
 
         self._signal_handler.signal_attr_changed(message.message, value)
 
@@ -489,10 +489,11 @@ class LineFollower:
 
     def _update_speed_ki(self, ki: int) -> bool:
         """Updates the integral gain for speed PID controller."""
-        if self._speed_ki == ki:
+        new_ki = float(ki) / 10000.0
+        if self._speed_ki == new_ki:
             return False
 
-        self._speed_ki = ki
+        self._speed_ki = new_ki
         return True
 
     def _update_speed_kd(self, kd: int) -> bool:

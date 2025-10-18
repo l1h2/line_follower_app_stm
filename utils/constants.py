@@ -36,6 +36,7 @@ class SerialConfig:
     PORT = "COM3"
     BAUD_RATE = 115200
     TIMEOUT = 1
+    PING_TIMEOUT = TIMEOUT * 1.1
 
 
 class UIConstants:

@@ -1,11 +1,12 @@
 import atexit
 import re
+from time import time
 
 import serial
 from PyQt6.QtCore import QObject, pyqtSignal
 from serial.tools import list_ports, list_ports_common
 
-from utils import SerialConfig, SerialMessage, SerialParser, app_configs
+from utils import SerialConfig, SerialMessage, SerialMessages, SerialParser, app_configs
 
 
 class BluetoothApi(QObject):
@@ -42,6 +43,7 @@ class BluetoothApi(QObject):
         self._bluetooth: serial.Serial | None = None
         self._com_port = self._get_initial_port()
         self._parser = SerialParser(self._on_frame, self._on_log)
+        self._last_receive_time = 0
 
         atexit.register(self._safe_disconnect)
 
@@ -118,6 +120,7 @@ class BluetoothApi(QObject):
                 self._com_port,
                 SerialConfig.BAUD_RATE,
                 timeout=SerialConfig.TIMEOUT,
+                write_timeout=SerialConfig.TIMEOUT,
             )
             print("Bluetooth connected.")
             self.connection_change.emit()
@@ -147,8 +150,10 @@ class BluetoothApi(QObject):
 
         try:
             if self._bluetooth.in_waiting <= 0:  # type: ignore[union-attr]
+                self._check_timeout()
                 return
 
+            self._last_receive_time = time()
             data = self._bluetooth.read(self._bluetooth.in_waiting)  # type: ignore[union-attr]
             for byte in data:
                 self._parser.feed_byte(byte)
@@ -181,6 +186,49 @@ class BluetoothApi(QObject):
             return SerialConfig.PORT
         return ports[0] if ports else ""
 
+    def _check_timeout(self) -> None:
+        """Check for read timeout and handle it."""
+        self._check_current_port()
+        if time() - self._last_receive_time <= SerialConfig.PING_TIMEOUT:
+            return
+
+        self._ping_robot()
+
+    def _check_current_port(self) -> None:
+        """Check if the current COM port is still available."""
+        if self._com_port not in self.ports:
+            print(f"Port {self._com_port} is no longer available.")
+            self._com_port = self._get_initial_port()
+            raise serial.SerialException("COM port disconnected.")
+
+    def _ping_robot(self) -> None:
+        """Send a ping command to the robot to check connectivity."""
+        self._send_ping()
+        self._wait_for_ping_response()
+
+    def _send_ping(self) -> None:
+        ping_msg = SerialMessage.from_message(SerialMessages.PING).frame
+
+        try:
+            self._bluetooth.write(ping_msg)  # type: ignore[union-attr]
+            print(f"Sent: {ping_msg}")
+        except serial.SerialException:
+            raise serial.SerialException("Could not send ping message.")
+
+    def _wait_for_ping_response(self) -> None:
+        try:
+            data = self._bluetooth.read(3)  # type: ignore[union-attr]
+            message = SerialMessage.from_frame(data)
+            print(message.string)
+
+            if message.message != SerialMessages.PING:
+                raise serial.SerialException("Invalid ping response received.")
+
+            self._last_receive_time = time()
+
+        except serial.SerialException:
+            raise serial.SerialException("No ping response received.")
+
     def _safe_disconnect(self) -> None:
         """Safely disconnect from the Bluetooth device when the program exits."""
         if self.connected:
@@ -195,7 +243,5 @@ class BluetoothApi(QObject):
     def _on_frame(self, message: SerialMessage) -> None:
         """Handle received serial messages from the SerialParser."""
         if app_configs.DEBUG_ENABLED:
-            print(
-                f"Message: {message.message.name}, Payload: {message.payload}, Frame: {message.frame}"
-            )
+            print(message.string)
         self.serial_output.emit(message)
