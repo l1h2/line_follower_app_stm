@@ -376,7 +376,9 @@ class OperationData:
 
         self.x = int.from_bytes(payload[2:4], byteorder="little", signed=True)
         self.y = int.from_bytes(payload[4:6], byteorder="little", signed=True)
-        self.heading = int.from_bytes(payload[6:8], byteorder="little", signed=True)
+        self.heading = (
+            float(int.from_bytes(payload[6:8], byteorder="little", signed=True)) / 10000
+        )
 
     def _empty_init(self) -> None:
         """Initializes all attributes to zero."""

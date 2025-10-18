@@ -57,9 +57,9 @@ class PwmSender(QWidget):
         self.kd_input = ParamSetter("KD:", SerialMessages.PID_KD)
         self.kff_input = ParamSetter("KFF:", SerialMessages.PID_KFF)
         self.kb_input = ParamSetter("KB:", SerialMessages.PID_KB)
-        self.accel_input = ParamSetter("Acceleration:", SerialMessages.PID_ACCEL)
         self.alpha_input = ParamSetter("Alpha (%):", SerialMessages.PID_ALPHA)
         self.clamp_input = ParamSetter("Clamp:", SerialMessages.PID_CLAMP)
+        self.accel_input = ParamSetter("Acceleration:", SerialMessages.PID_ACCEL)
         self.base_pwm_input = ParamSetter("Base PWM:", SerialMessages.PID_BASE_PWM)
 
     def _add_tittle(self) -> None:
@@ -77,9 +77,9 @@ class PwmSender(QWidget):
         main_layout.addWidget(self.kd_input)
         main_layout.addWidget(self.kff_input)
         main_layout.addWidget(self.kb_input)
-        main_layout.addWidget(self.accel_input)
         main_layout.addWidget(self.alpha_input)
         main_layout.addWidget(self.clamp_input)
+        main_layout.addWidget(self.accel_input)
         main_layout.addWidget(self.base_pwm_input)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         main_layout.setContentsMargins(0, 0, 0, 0)

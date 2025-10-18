@@ -312,11 +312,11 @@ class LineFollower:
 
     def _handle_serial_message(self, message: SerialMessage) -> None:
         """Handles incoming serial messages and updates config params."""
-        if message.message not in self._config_map:
-            return
-
         if message.message == SerialMessages.OPERATION_DATA:
             self._mapper.handle_operation_data(message.payload)
+            return
+
+        if message.message not in self._config_map:
             return
 
         value = int.from_bytes(message.payload, byteorder="little")

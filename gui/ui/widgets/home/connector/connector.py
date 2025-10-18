@@ -2,7 +2,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from robot import LineFollower
-from utils import RobotStates, SerialMessage, SerialMessages, Styles
+from utils import (
+    RobotStates,
+    SerialMessage,
+    SerialMessages,
+    Styles,
+    clear_operation_logs,
+)
 
 
 class ControllerWidget(QWidget):
@@ -56,6 +62,7 @@ class ControllerWidget(QWidget):
     def _toggle_start(self) -> None:
         """Toggle the start button to start or stop the robot."""
         if self._line_follower.state == RobotStates.IDLE:
+            clear_operation_logs()
             self._line_follower.send_message(
                 SerialMessage.from_message(SerialMessages.START)
             )
