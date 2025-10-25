@@ -13,10 +13,7 @@ from utils import CsvHeaders, Files
 OFFSET_DIST = 30
 
 
-def plot_path(df: pd.DataFrame) -> None:
-    x = df[CsvHeaders.X].to_numpy()
-    y = df[CsvHeaders.Y].to_numpy()
-
+def plot_markers(df: pd.DataFrame, x: np.ndarray, y: np.ndarray) -> None:
     heading = df[CsvHeaders.HEADING].to_numpy()
     perp_angle = heading + np.pi / 2.0
     perp_dx = np.cos(perp_angle)
@@ -32,9 +29,6 @@ def plot_path(df: pd.DataFrame) -> None:
 
     left_mask = left_ir.astype(bool)
     right_mask = right_ir.astype(bool)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(x, y, marker="o", linestyle="-", label="Robot Path")
 
     if left_mask.any():
         plt.scatter(
@@ -53,6 +47,18 @@ def plot_path(df: pd.DataFrame) -> None:
             zorder=5,
         )
 
+
+def plot_path(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    x = df[CsvHeaders.X].to_numpy()
+    y = df[CsvHeaders.Y].to_numpy()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y, marker="o", linestyle="-", label="Robot Path")
+
+    return x, y
+
+
+def show_plot() -> None:
     plt.axis("equal")
     plt.xlabel("X Position")
     plt.ylabel("Y Position")
@@ -63,4 +69,6 @@ def plot_path(df: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     df = pd.read_csv(Files.ENCODER_DATA)
-    plot_path(df)
+    x, y = plot_path(df)
+    # plot_markers(df, x, y)
+    show_plot()

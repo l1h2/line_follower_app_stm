@@ -74,13 +74,9 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
 }
 
 FLOAT_MESSAGES = {
-    SerialMessages.BASE_SPEED,
-    SerialMessages.PID_ALPHA,
-}
-
-# Uses 4 digits of precision for float representation
-EXTENDED_FLOAT_MESSAGES = {
-    SerialMessages.SPEED_KI,
+    SerialMessages.BASE_SPEED: 2,
+    SerialMessages.PID_ALPHA: 2,
+    SerialMessages.SPEED_KI: 4,
 }
 
 
@@ -114,6 +110,7 @@ class SerialMessage:
 
     @staticmethod
     def _validate_checksum(msg: SerialMessages, payload: bytes, checksum: int) -> bool:
+        """Validate the checksum of a message."""
         calculated_checksum = msg.value
         for byte in payload:
             calculated_checksum ^= byte
@@ -288,6 +285,7 @@ class SerialParser:
             self._handle_log_byte(byte)
 
     def _handle_data_byte(self, byte: int) -> None:
+        """Handle bytes that are part of a data message."""
         if self._state == self._ID:
             self._handle_id_byte(byte)
         elif self._state == self._PAYLOAD:
@@ -296,6 +294,7 @@ class SerialParser:
             self._handle_checksum_byte(byte)
 
     def _handle_id_byte(self, byte: int) -> None:
+        """Handle the message ID byte."""
         self._msg_id = (
             SerialMessages(byte)
             if byte in SerialMessages
@@ -310,11 +309,13 @@ class SerialParser:
             self._state = self._CHECKSUM
 
     def _handle_payload_byte(self, byte: int) -> None:
+        """Handle bytes that are part of the payload."""
         self._payload.append(byte)
         if len(self._payload) == self._expected_payload_size:
             self._state = self._CHECKSUM
 
     def _handle_checksum_byte(self, byte: int) -> None:
+        """Handle the checksum byte and finalize the message."""
         checksum = byte
         self._message = SerialMessage.from_message(
             self._msg_id, bytes(self._payload), checksum
@@ -323,6 +324,7 @@ class SerialParser:
         self._on_frame(self._message)
 
     def _handle_log_byte(self, byte: int) -> None:
+        """Handle bytes that are part of log messages."""
         if byte != 0x0A:  # Newline ('\n')
             self._log_buffer.append(byte)
             return

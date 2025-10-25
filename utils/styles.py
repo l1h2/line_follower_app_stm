@@ -38,3 +38,10 @@ class Styles:
         font-weight: bold;
         font-size: 16px;
     """
+
+    SEND_ALL_BUTTON = """
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+    """

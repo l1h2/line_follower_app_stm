@@ -3,7 +3,6 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from robot import LineFollower
 from utils import (
-    EXTENDED_FLOAT_MESSAGES,
     FLOAT_MESSAGES,
     Booleans,
     RobotStates,
@@ -103,9 +102,7 @@ class StrDisplay(QWidget):
             str_value = StopModes(value).name
         elif message == SerialMessages.LOG_DATA:
             str_value = Booleans(value).name
-        elif message in FLOAT_MESSAGES:
-            str_value = str(value / 100)
-        elif message in EXTENDED_FLOAT_MESSAGES:
-            str_value = str(value / 10000)
+        elif (precision := FLOAT_MESSAGES.get(message, 0)) != 0:
+            str_value = str(value / (10**precision))
 
         self.value.setText(str_value)

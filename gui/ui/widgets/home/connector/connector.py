@@ -1,5 +1,12 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QHBoxLayout,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from robot import LineFollower
 from utils import (
@@ -149,12 +156,18 @@ class ControllerWidget(QWidget):
         if self._line_follower.bluetooth.connected:
             self._line_follower.bluetooth.disconnect_serial()
         else:
-            self._line_follower.bluetooth.connect_serial()
+            self.connect_button.setEnabled(False)
+            self.connect_button.setStyleSheet(Styles.DISABLED_BUTTONS)
+            QApplication.processEvents()
+            if not self._line_follower.bluetooth.connect_serial():
+                self._update_connection_button()
 
         self._update_ports()
 
     def _update_connection_button(self) -> None:
         """Update the connection button based on the Bluetooth connection status."""
+        self.connect_button.setEnabled(True)
+
         if self._line_follower.bluetooth.connected:
             self.connect_button.setText("Disconnect")
             self.connect_button.setStyleSheet(Styles.STOP_BUTTONS)

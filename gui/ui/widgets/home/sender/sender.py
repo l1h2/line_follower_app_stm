@@ -1,7 +1,7 @@
-from math import pi
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
+from utils import Styles
 
 from .general_sender import GeneralSender
 from .pwm_sender import PwmSender
@@ -42,8 +42,8 @@ class SenderWidget(QWidget):
         self.send_all_button = QPushButton("Send All")
         self.send_all_button.setFixedHeight(60)
         self.send_all_button.setFixedWidth(600)
-        self.send_all_button.setToolTip("Send all values to the robot")
-        self.send_all_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        # self.send_all_button.setToolTip("Send all values to the robot")
+        self.send_all_button.setStyleSheet(Styles.SEND_ALL_BUTTON)
         self.send_all_button.clicked.connect(self._on_send_all)
 
     def _on_send_all(self) -> None:
