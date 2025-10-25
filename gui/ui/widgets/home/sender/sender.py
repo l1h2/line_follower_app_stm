@@ -16,6 +16,7 @@ class SenderWidget(QWidget):
 
     #### Attributes:
     - `pwm_sender (PwmSender)`: Widget for sending PWM-related parameters.
+    - `speed_sender (SpeedSender)`: Widget for sending Speed-related parameters.
     - `general_sender (GeneralSender)`: Widget for sending general parameters.
     - `send_all_button (QPushButton)`: Button to send all values to the robot.
     """
@@ -42,7 +43,7 @@ class SenderWidget(QWidget):
         self.send_all_button = QPushButton("Send All")
         self.send_all_button.setFixedHeight(60)
         self.send_all_button.setFixedWidth(600)
-        # self.send_all_button.setToolTip("Send all values to the robot")
+        self.send_all_button.setToolTip("Send all values to the robot")
         self.send_all_button.setStyleSheet(Styles.SEND_ALL_BUTTON)
         self.send_all_button.clicked.connect(self._on_send_all)
 

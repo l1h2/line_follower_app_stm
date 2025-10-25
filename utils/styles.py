@@ -22,7 +22,6 @@ class Styles:
 
     CHECK_BUTTONS = """
         QPushButton {
-            background-color: rgba(255, 255, 255, 0.8);
             border: 1px solid gray;
             border-radius: 5px;
         }

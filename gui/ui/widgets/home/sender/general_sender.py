@@ -16,6 +16,7 @@ class GeneralSender(QWidget):
     - `turbine_pwm_input (ParamSetter)`: Input field for the turbine PWM value.
     - `laps_input (ParamSetter)`: Input field for the number of laps.
     - `stop_time_input (ParamSetter)`: Input field for the stop time value.
+    - `stop_distance_input (ParamSetter)`: Input field for the stop distance value.
     - `running_mode_input (ParamSetter)`: Mode select for the running mode.
     - `stop_mode_input (ParamSetter)`: Mode select for the stop mode.
     - `log_data_input (ParamSetter)`: Mode select for logging data.

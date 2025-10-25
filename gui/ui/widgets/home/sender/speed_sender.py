@@ -17,6 +17,10 @@ class SpeedSender(QWidget):
     - `ki_input (ParamSetter)`: Input field for the Speed KI value.
     - `kd_input (ParamSetter)`: Input field for the Speed KD value.
     - `base_speed (ParamSetter)`: Input field for the base speed value.
+    - `lookahead (ParamSetter)`: Input field for the lookahead distance.
+
+    #### Methods:
+    - `send_all() -> None`: Sends all Speed-related parameters to the robot.
     """
 
     def __init__(self):
@@ -34,6 +38,8 @@ class SpeedSender(QWidget):
         self.kff_input.send_value()
         self.base_speed.send_value()
         self.lookahead.send_value()
+        self.curvature_gain.send_value()
+        self.imu_alpha.send_value()
 
     def _init_ui(self) -> None:
         """Initialize the UI components of the Speed sender widget."""
@@ -50,6 +56,10 @@ class SpeedSender(QWidget):
         self.kff_input = ParamSetter("Speed KFF:", SerialMessages.SPEED_KFF)
         self.base_speed = ParamSetter("Base Speed (cm/s):", SerialMessages.BASE_SPEED)
         self.lookahead = ParamSetter("Lookahead (cm):", SerialMessages.LOOKAHEAD)
+        self.curvature_gain = ParamSetter(
+            "Curvature Gain:", SerialMessages.WHEEL_BASE_CORRECTION
+        )
+        self.imu_alpha = ParamSetter("IMU Alpha:", SerialMessages.IMU_ALPHA)
 
     def _add_tittle(self) -> None:
         """Add title to the GeneralSender widget."""
@@ -67,5 +77,7 @@ class SpeedSender(QWidget):
         main_layout.addWidget(self.kff_input)
         main_layout.addWidget(self.base_speed)
         main_layout.addWidget(self.lookahead)
+        main_layout.addWidget(self.curvature_gain)
+        main_layout.addWidget(self.imu_alpha)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         main_layout.setContentsMargins(0, 0, 0, 0)

@@ -90,7 +90,7 @@ class TextDisplay(QTextEdit):
     def _crop_text(self) -> None:
         """Crop the text in the QTextEdit widget to fit within the maximum display lines."""
         current_text = self.toPlainText()
-        lines = current_text.splitlines()
+        lines = current_text.split("\n")
 
         if len(lines) <= self._max_display_lines:
             return

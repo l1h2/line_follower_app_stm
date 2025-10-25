@@ -42,4 +42,6 @@ PARAM_MAX_VALUES = {
     SerialMessages.BASE_SPEED: 635,
     SerialMessages.PID_ALPHA: 100,
     SerialMessages.SPEED_KI: 6,
+    SerialMessages.WHEEL_BASE_CORRECTION: 3,
+    SerialMessages.IMU_ALPHA: 100,
 }

@@ -22,6 +22,9 @@ class PwmSender(QWidget):
     - `alpha_input (ParamSetter)`: Input field for the alpha value.
     - `clamp_input (ParamSetter)`: Input field for the clamp value.
     - `base_pwm_input (ParamSetter)`: Input field for the base PWM value.
+
+    #### Methods:
+    - `send_all() -> None`: Sends all PWM-related parameters to the robot.
     """
 
     def __init__(self):

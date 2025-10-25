@@ -16,9 +16,11 @@ class SignalHandler(QObject):
 
     #### Signals:
     - `state_change (RobotStates)`: Signal emitted when the state changes.
+    - `attr_changed (SerialMessages, int)`: Signal emitted when an attribute changes.
 
     #### Methods:
-    - `signal_state_change(state: RobotStates) -> None`: Emits the state change signal.
+    - `signal_state_changed(state: RobotStates) -> None`: Emits the state change signal.
+    - `signal_attr_changed(message: SerialMessages, value: int) -> None`: Emits the attribute change signal.
     """
 
     state_changed = pyqtSignal(RobotStates)
@@ -81,9 +83,13 @@ class LineFollower:
     - `speed_kff (int)`: Feedforward gain for speed PID controller.
     - `base_speed (float)`: Base speed for the robot.
     - `lookahead (int)`: Lookahead distance for the robot.
+    - `curvature_gain (float)`: Wheel base correction factor used in the robot.
+    - `imu_alpha (float)`: Alpha value for the IMU fusion.
 
     #### Methods:
-    - `update_config(message: SerialMessages, value: int) -> None`: Updates the configuration of the robot based on the message received.
+    - `send_message(message: SerialMessage) -> None`: Sends a serial message to the robot via Bluetooth.
+    - `connect_state_changer(slot: Callable[[RobotStates], None]) -> None`: Connects a slot to the state change signal.
+    - `connect_attr_changer(slot: Callable[[SerialMessages, int], None]) -> None`: Connects a slot to the attribute change signal.
     """
 
     _instance = None
@@ -123,6 +129,8 @@ class LineFollower:
         self._speed_kff = 0
         self._base_speed = 0
         self._lookahead = 0
+        self._curvature_gain = 0
+        self._imu_alpha = 0
 
         self._bluetooth = BluetoothApi()
         self._mapper = Mapper()
@@ -154,6 +162,8 @@ class LineFollower:
             SerialMessages.PID_ALPHA: self._update_alpha,
             SerialMessages.PID_CLAMP: self._update_clamp,
             SerialMessages.LOOKAHEAD: self._update_lookahead,
+            SerialMessages.WHEEL_BASE_CORRECTION: self._update_curvature_gain,
+            SerialMessages.IMU_ALPHA: self._update_imu_alpha,
         }
 
         self._initialized = True
@@ -282,6 +292,16 @@ class LineFollower:
     def lookahead(self) -> int:
         """Lookahead distance for the robot."""
         return self._lookahead
+
+    @property
+    def curvature_gain(self) -> float:
+        """Wheel base correction factor used in the robot."""
+        return self._curvature_gain
+
+    @property
+    def imu_alpha(self) -> float:
+        """Alpha value for the IMU fusion."""
+        return self._imu_alpha
 
     def send_message(self, message: SerialMessage) -> None:
         """
@@ -527,4 +547,22 @@ class LineFollower:
             return False
 
         self._lookahead = lookahead
+        return True
+
+    def _update_curvature_gain(self, curvature_gain: int) -> bool:
+        """Updates the wheel base correction factor used in the robot."""
+        new_gain = float(curvature_gain) / 100.0
+        if self._curvature_gain == new_gain:
+            return False
+
+        self._curvature_gain = new_gain
+        return True
+
+    def _update_imu_alpha(self, imu_alpha: int) -> bool:
+        """Updates the alpha value for the IMU fusion."""
+        new_alpha = float(imu_alpha) / 100.0
+        if self._imu_alpha == new_alpha:
+            return False
+
+        self._imu_alpha = new_alpha
         return True

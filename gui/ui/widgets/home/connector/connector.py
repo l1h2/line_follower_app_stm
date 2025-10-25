@@ -61,7 +61,7 @@ class ControllerWidget(QWidget):
         self.start_button = QPushButton()
         self.start_button.setFixedWidth(200)
         self.start_button.setFixedHeight(80)
-        self.start_button.setToolTip("Start RUNNING mode")
+        self.start_button.setToolTip("Start/Stop RUNNING mode")
         self.start_button.setStyleSheet(Styles.START_BUTTONS)
         self.start_button.clicked.connect(self._toggle_start)
         self._update_start_button(self._line_follower.state)
@@ -147,7 +147,7 @@ class ControllerWidget(QWidget):
         self.connect_button = QPushButton()
         self.connect_button.setFixedWidth(200)
         self.connect_button.setFixedHeight(80)
-        self.connect_button.setToolTip("Connect bluetooth")
+        self.connect_button.setToolTip("Connect/Disconnect bluetooth")
         self.connect_button.clicked.connect(self._toggle_connection)
         self._update_connection_button()
 
