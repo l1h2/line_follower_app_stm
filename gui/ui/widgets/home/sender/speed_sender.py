@@ -59,7 +59,7 @@ class SpeedSender(QWidget):
         self.curvature_gain = ParamSetter(
             "Curvature Gain:", SerialMessages.WHEEL_BASE_CORRECTION
         )
-        self.imu_alpha = ParamSetter("IMU Alpha:", SerialMessages.IMU_ALPHA)
+        self.imu_alpha = ParamSetter("IMU Alpha (%):", SerialMessages.IMU_ALPHA)
 
     def _add_tittle(self) -> None:
         """Add title to the GeneralSender widget."""
