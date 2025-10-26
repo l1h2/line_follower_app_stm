@@ -106,6 +106,7 @@ class NumInput(QWidget):
         self.button = QPushButton("Send")
         self.button.setFixedWidth(50)
         self.button.setToolTip("Send the value")
+        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button.clicked.connect(self._on_input)
 
     def _on_text_changed(self, text: str) -> None:

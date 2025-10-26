@@ -36,6 +36,7 @@ class DebugButton(QWidget):
         self._debug_button.setChecked(debug_enabled())
         self._debug_button.setToolTip("Enable/Disable debug prints")
         self._debug_button.setStyleSheet(Styles.CHECK_BUTTONS)
+        self._debug_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self._debug_button.setFixedSize(70, 30)
         self._debug_button.clicked.connect(self._set_debug_state)
 

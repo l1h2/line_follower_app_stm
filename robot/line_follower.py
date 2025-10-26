@@ -105,32 +105,32 @@ class LineFollower:
 
         self._signal_handler = SignalHandler()
 
-        self._kp = 0
-        self._ki = 0
-        self._kd = 0
-        self._kff = 0
-        self._kb = 0
-        self._acceleration = 0
-        self._alpha = 0
-        self._clamp = 0
-        self._base_pwm = 0
-        self._max_pwm = 0
+        self._kp = None
+        self._ki = None
+        self._kd = None
+        self._kff = None
+        self._kb = None
+        self._acceleration = None
+        self._alpha = None
+        self._clamp = None
+        self._base_pwm = None
+        self._max_pwm = None
         self._state = None
         self._running_mode = None
         self._stop_mode = None
-        self._laps = 0
-        self._stop_time = 0
-        self._stop_distance = 0
-        self._log_data = False
-        self._turbine_pwm = 0
-        self._speed_kp = 0
-        self._speed_ki = 0
-        self._speed_kd = 0
-        self._speed_kff = 0
-        self._base_speed = 0
-        self._lookahead = 0
-        self._curvature_gain = 0
-        self._imu_alpha = 0
+        self._laps = None
+        self._stop_time = None
+        self._stop_distance = None
+        self._log_data = None
+        self._turbine_pwm = None
+        self._speed_kp = None
+        self._speed_ki = None
+        self._speed_kd = None
+        self._speed_kff = None
+        self._base_speed = None
+        self._lookahead = None
+        self._curvature_gain = None
+        self._imu_alpha = None
 
         self._bluetooth = BluetoothApi()
         self._mapper = Mapper()
@@ -181,127 +181,129 @@ class LineFollower:
     @property
     def kp(self) -> int:
         """Proportional gain for PID controller."""
-        return self._kp
+        return self._kp if self._kp is not None else 0
 
     @property
     def ki(self) -> int:
         """Integral gain for PID controller."""
-        return self._ki
+        return self._ki if self._ki is not None else 0
 
     @property
     def kd(self) -> int:
         """Derivative gain for PID controller."""
-        return self._kd
+        return self._kd if self._kd is not None else 0
 
     @property
     def kff(self) -> int:
         """Feedforward gain for PID controller."""
-        return self._kff
+        return self._kff if self._kff is not None else 0
 
     @property
     def kb(self) -> int:
         """Brake gain for PID controller."""
-        return self._kb
+        return self._kb if self._kb is not None else 0
 
     @property
     def alpha(self) -> float:
         """Alpha value for PID controller."""
-        return self._alpha
+        return self._alpha if self._alpha is not None else 0.0
 
     @property
     def clamp(self) -> int:
         """Clamp value for PID controller."""
-        return self._clamp
+        return self._clamp if self._clamp is not None else 0
 
     @property
     def base_pwm(self) -> int:
         """Base PWM value for motor control."""
-        return self._base_pwm
+        return self._base_pwm if self._base_pwm is not None else 0
 
     @property
     def max_pwm(self) -> int:
         """Maximum PWM value for motor control."""
-        return self._max_pwm
+        return self._max_pwm if self._max_pwm is not None else 0
 
     @property
-    def state(self) -> RobotStates | None:
+    def state(self) -> RobotStates:
         """Current state of the robot."""
-        return self._state
+        return self._state if self._state is not None else RobotStates.INIT
 
     @property
-    def running_mode(self) -> RunningModes | None:
+    def running_mode(self) -> RunningModes:
         """Current running mode of the robot."""
-        return self._running_mode
+        return (
+            self._running_mode if self._running_mode is not None else RunningModes.INIT
+        )
 
     @property
-    def stop_mode(self) -> StopModes | None:
+    def stop_mode(self) -> StopModes:
         """Current stop mode of the robot."""
-        return self._stop_mode
+        return self._stop_mode if self._stop_mode is not None else StopModes.NONE
 
     @property
     def laps(self) -> int:
         """Number of laps completed."""
-        return self._laps
+        return self._laps if self._laps is not None else 0
 
     @property
     def stop_time(self) -> int:
         """Time to stop the robot."""
-        return self._stop_time
+        return self._stop_time if self._stop_time is not None else 0
 
     @property
     def stop_distance(self) -> int:
         """Distance to stop the robot."""
-        return self._stop_distance
+        return self._stop_distance if self._stop_distance is not None else 0
 
     @property
     def log_data(self) -> bool:
         """Indicates if data logging is enabled."""
-        return self._log_data
+        return self._log_data if self._log_data is not None else False
 
     @property
     def turbine_pwm(self) -> int:
         """Turbine PWM value for motor control."""
-        return self._turbine_pwm
+        return self._turbine_pwm if self._turbine_pwm is not None else 0
 
     @property
     def speed_kp(self) -> int:
         """Proportional gain for speed PID controller."""
-        return self._speed_kp
+        return self._speed_kp if self._speed_kp is not None else 0
 
     @property
     def speed_ki(self) -> float:
         """Integral gain for speed PID controller."""
-        return self._speed_ki
+        return self._speed_ki if self._speed_ki is not None else 0.0
 
     @property
     def speed_kd(self) -> int:
         """Derivative gain for speed PID controller."""
-        return self._speed_kd
+        return self._speed_kd if self._speed_kd is not None else 0
 
     @property
     def speed_kff(self) -> int:
         """Feedforward gain for speed PID controller."""
-        return self._speed_kff
+        return self._speed_kff if self._speed_kff is not None else 0
 
     @property
     def base_speed(self) -> float:
         """Base speed for the robot."""
-        return self._base_speed
+        return self._base_speed if self._base_speed is not None else 0.0
 
     @property
     def lookahead(self) -> int:
         """Lookahead distance for the robot."""
-        return self._lookahead
+        return self._lookahead if self._lookahead is not None else 0
 
     @property
     def curvature_gain(self) -> float:
         """Wheel base correction factor used in the robot."""
-        return self._curvature_gain
+        return self._curvature_gain if self._curvature_gain is not None else 0.0
 
     @property
     def imu_alpha(self) -> float:
         """Alpha value for the IMU fusion."""
-        return self._imu_alpha
+        return self._imu_alpha if self._imu_alpha is not None else 0.0
 
     def send_message(self, message: SerialMessage) -> None:
         """

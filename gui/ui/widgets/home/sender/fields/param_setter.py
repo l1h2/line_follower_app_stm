@@ -1,7 +1,14 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
-from utils import Booleans, RunningModes, SerialMessages, StopModes, UIConstants
+from utils import (
+    FLOAT_MESSAGES,
+    Booleans,
+    RunningModes,
+    SerialMessages,
+    StopModes,
+    UIConstants,
+)
 
 from ...listener.str_display import StrDisplay
 from .mode_select import ModeSelect
@@ -31,6 +38,7 @@ class ParamSetter(QWidget):
         super().__init__()
         self._label = label
         self._message = message
+        self._is_float = message in FLOAT_MESSAGES
 
         self.setFixedHeight(UIConstants.ROW_HEIGHT)
         self._init_ui()
@@ -44,6 +52,14 @@ class ParamSetter(QWidget):
         """
         Send the value from the input field to the callback function.
         """
+        if self.input.value == "":
+            return
+
+        if self._is_float and float(self.input.value) == float(
+            self.display.value.text()
+        ):
+            return
+
         if self.input.value == self.display.value.text():
             return
 

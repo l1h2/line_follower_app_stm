@@ -24,6 +24,7 @@ class Styles:
         QPushButton {
             border: 1px solid gray;
             border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.3);
         }
         QPushButton:checked {
             background-color: rgba(0, 128, 0, 0.8);

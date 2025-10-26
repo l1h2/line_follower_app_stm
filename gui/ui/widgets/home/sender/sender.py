@@ -45,6 +45,7 @@ class SenderWidget(QWidget):
         self.send_all_button.setFixedWidth(600)
         self.send_all_button.setToolTip("Send all values to the robot")
         self.send_all_button.setStyleSheet(Styles.SEND_ALL_BUTTON)
+        self.send_all_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.send_all_button.clicked.connect(self._on_send_all)
 
     def _on_send_all(self) -> None:

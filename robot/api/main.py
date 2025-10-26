@@ -16,6 +16,7 @@ class BluetoothApi(QObject):
     Handles Bluetooth communication with the robot. Inherits from QObject to use signals and slots.
 
     #### Signals:
+    - `connection_failed (str)`: Signal emitted when a connection fails, with an error message.
     - `connection_change`: Signal emitted when the Bluetooth connection changes.
     - `log_output (bool)`: Signal emitted when a log message is received.
     - `serial_output (SerialMessage)`: Signal emitted when a serial message is received.
@@ -34,6 +35,7 @@ class BluetoothApi(QObject):
     - `write_data(data: bytes) -> None`: Writes binary data to the Bluetooth device.
     """
 
+    connection_failed = pyqtSignal(str)
     connection_change = pyqtSignal()
     log_output = pyqtSignal(str)
     serial_output = pyqtSignal(SerialMessage)
@@ -126,8 +128,10 @@ class BluetoothApi(QObject):
             self._logger.info("Bluetooth connected.")
             self.connection_change.emit()
         except serial.SerialException as e:
-            self._logger.error(f"Failed to connect to Bluetooth device: {e}")
+            msg = f"Failed to connect to Bluetooth device: {e}"
+            self._logger.error(msg)
             self._bluetooth = None
+            self.connection_failed.emit(msg)
 
         return self.connected
 
@@ -160,8 +164,10 @@ class BluetoothApi(QObject):
                 self._parser.feed_byte(byte)
 
         except serial.SerialException as e:
-            self._logger.critical(f"Failed to read data from Bluetooth device: {e}")
+            msg = f"Failed to read data from Bluetooth device: {e}"
+            self._logger.critical(msg)
             self.disconnect_serial()
+            self.connection_failed.emit(msg)
 
     def write_data(self, data: bytes) -> None:
         """
@@ -177,8 +183,10 @@ class BluetoothApi(QObject):
             self._bluetooth.write(data)  # type: ignore[union-attr]
             self._logger.info(f"Sent: {data}")
         except serial.SerialException as e:
-            self._logger.critical(f"Failed to write data to Bluetooth device: {e}")
+            msg = f"Failed to write data to Bluetooth device: {e}"
+            self._logger.critical(msg)
             self.disconnect_serial()
+            self.connection_failed.emit(msg)
 
     def _get_initial_port(self) -> str:
         """Get the initial COM port for the Bluetooth connection."""
@@ -214,7 +222,7 @@ class BluetoothApi(QObject):
             self._bluetooth.write(ping_msg)  # type: ignore[union-attr]
             self._logger.info(f"Sent: {ping_msg}")
         except serial.SerialException:
-            raise serial.SerialException("Could not send ping message.")
+            raise serial.SerialException("Could not send ping message to the robot.")
 
     def _wait_for_ping_response(self) -> None:
         try:
@@ -228,7 +236,7 @@ class BluetoothApi(QObject):
             self._last_receive_time = time()
 
         except serial.SerialException:
-            raise serial.SerialException("No ping response received.")
+            raise serial.SerialException("Robot took too long to respond.")
 
     def _safe_disconnect(self) -> None:
         """Safely disconnect from the Bluetooth device when the program exits."""

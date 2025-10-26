@@ -2,6 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QStackedLayout, QVBoxLayout, QWidget
 
 from gui.workers import BluetoothListenerWorker
+from robot import LineFollower
 from utils import SerialMessage, SerialMessages, debug_enabled
 
 from .debug_button import DebugButton
@@ -24,6 +25,7 @@ class ListenerWidget(QWidget):
     def __init__(self):
         super().__init__()
         self._worker = BluetoothListenerWorker()
+        LineFollower().bluetooth.connection_failed.connect(self._handle_log_output)
 
         self._init_ui()
         self._start_worker()

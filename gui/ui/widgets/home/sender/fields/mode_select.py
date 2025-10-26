@@ -76,6 +76,7 @@ class ModeSelect(QWidget):
         self.options = QComboBox()
         self.options.setFixedWidth(120)
         self.options.addItems([e.name for e in self._enum_class])
+        self.options.setCursor(Qt.CursorShape.PointingHandCursor)
         self.options.setToolTip("Select a mode")
 
     def _add_button(self) -> None:
@@ -83,6 +84,7 @@ class ModeSelect(QWidget):
         self.button = QPushButton("Send")
         self.button.setFixedWidth(50)
         self.button.setToolTip("Send the value")
+        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button.clicked.connect(self._on_input)
 
     def _on_input(self) -> None:
