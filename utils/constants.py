@@ -1,14 +1,41 @@
+import os
+import sys
 from enum import IntEnum
+from pathlib import Path
+
+
+class Paths:
+    """List of important directory paths used in the program."""
+
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    DATA = (
+        str(Path(sys.executable).parent / "data")
+        if getattr(sys, "frozen", False)
+        else os.path.join(ROOT, "data")
+    )
+    ASSETS = os.path.join(ROOT, "assets")
+    BUILDS_DIR = os.path.join(ROOT, "builds")
+    PYINSTALLER_BUILD = os.path.join(ROOT, "pyinstaller_build")
+    PYINSTALLER_WORK = os.path.join(PYINSTALLER_BUILD, "build")
+    PYINSTALLER_DIST = os.path.join(PYINSTALLER_BUILD, "dist")
+    PYINSTALLER_SPEC = os.path.join(PYINSTALLER_BUILD, "app.spec")
 
 
 class Files:
     """List of file names used in the program."""
 
-    BINARY_FILE = "data/serial_data_log.bin"
-    TIMESTAMP_FILE = "data/timestamps.txt"
-    TEXT_FILE = "data/serial_data_log.txt"
-    SENSOR_DATA = "data/sensors.csv"
-    ENCODER_DATA = "data/encoder.csv"
+    MAIN = os.path.join(Paths.ROOT, "main.py")
+    BINARY_FILE = os.path.join(Paths.DATA, "serial_data_log.bin")
+    TEXT_FILE = os.path.join(Paths.DATA, "serial_data_log.txt")
+    SENSOR_DATA = os.path.join(Paths.DATA, "sensors.csv")
+    ENCODER_DATA = os.path.join(Paths.DATA, "encoder.csv")
+
+
+class Assets:
+    """Paths to asset files used in the program."""
+
+    ICON_IMAGE = os.path.join(Paths.ASSETS, "app_icon.ico")
+    ALT_ICON_IMAGE = os.path.join(Paths.ASSETS, "alt_icon.ico")
 
 
 class CsvHeaders:

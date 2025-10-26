@@ -14,9 +14,7 @@ bluetooth = None
 
 
 def clear_files() -> None:
-    with open(Files.BINARY_FILE, "wb"), open(Files.TEXT_FILE, "w"), open(
-        Files.TIMESTAMP_FILE, "w"
-    ):
+    with open(Files.BINARY_FILE, "wb"), open(Files.TEXT_FILE, "w"):
         pass
 
 

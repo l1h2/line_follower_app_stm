@@ -6,7 +6,7 @@ import serial
 from PyQt6.QtCore import QObject, pyqtSignal
 from serial.tools import list_ports, list_ports_common
 
-from utils import SerialConfig, SerialMessage, SerialMessages, SerialParser, app_configs
+from utils import SerialConfig, SerialMessage, SerialMessages, SerialParser, get_logger
 
 
 class BluetoothApi(QObject):
@@ -44,6 +44,7 @@ class BluetoothApi(QObject):
         self._com_port = self._get_initial_port()
         self._parser = SerialParser(self._on_frame, self._on_log)
         self._last_receive_time = 0
+        self._logger = get_logger()
 
         atexit.register(self._safe_disconnect)
 
@@ -97,11 +98,11 @@ class BluetoothApi(QObject):
             return False
 
         if self.connected:
-            print("Disconnect before changing port.")
+            self._logger.warning("Disconnect before changing port.")
             return False
 
         if com_port not in self.ports:
-            print(f"Port {com_port} is not available.")
+            self._logger.error(f"Port {com_port} is not available.")
             return False
 
         self._com_port = com_port
@@ -114,7 +115,7 @@ class BluetoothApi(QObject):
         Returns:
             bool: True if the connection was successful, False otherwise.
         """
-        print(f"Connecting to Bluetooth on port {self._com_port}...")
+        self._logger.info(f"Connecting to Bluetooth on port {self._com_port}...")
         try:
             self._bluetooth = serial.Serial(
                 self._com_port,
@@ -122,10 +123,10 @@ class BluetoothApi(QObject):
                 timeout=SerialConfig.TIMEOUT,
                 write_timeout=SerialConfig.TIMEOUT,
             )
-            print("Bluetooth connected.")
+            self._logger.info("Bluetooth connected.")
             self.connection_change.emit()
         except serial.SerialException as e:
-            print(f"Failed to connect to Bluetooth device: {e}")
+            self._logger.error(f"Failed to connect to Bluetooth device: {e}")
             self._bluetooth = None
 
         return self.connected
@@ -138,7 +139,7 @@ class BluetoothApi(QObject):
             self._bluetooth.close()  # type: ignore[union-attr]
         self._bluetooth = None
 
-        print("Bluetooth disconnected.")
+        self._logger.info("Bluetooth disconnected.")
         self.connection_change.emit()
 
     def read_data(self) -> None:
@@ -159,7 +160,7 @@ class BluetoothApi(QObject):
                 self._parser.feed_byte(byte)
 
         except serial.SerialException as e:
-            print(f"Failed to read data from Bluetooth device: {e}")
+            self._logger.critical(f"Failed to read data from Bluetooth device: {e}")
             self.disconnect_serial()
 
     def write_data(self, data: bytes) -> None:
@@ -174,9 +175,9 @@ class BluetoothApi(QObject):
 
         try:
             self._bluetooth.write(data)  # type: ignore[union-attr]
-            print(f"Sent: {data}")
+            self._logger.info(f"Sent: {data}")
         except serial.SerialException as e:
-            print(f"Failed to write data to Bluetooth device: {e}")
+            self._logger.critical(f"Failed to write data to Bluetooth device: {e}")
             self.disconnect_serial()
 
     def _get_initial_port(self) -> str:
@@ -197,7 +198,7 @@ class BluetoothApi(QObject):
     def _check_current_port(self) -> None:
         """Check if the current COM port is still available."""
         if self._com_port not in self.ports:
-            print(f"Port {self._com_port} is no longer available.")
+            self._logger.warning(f"Port {self._com_port} is no longer available.")
             self._com_port = self._get_initial_port()
             raise serial.SerialException("COM port disconnected.")
 
@@ -211,7 +212,7 @@ class BluetoothApi(QObject):
 
         try:
             self._bluetooth.write(ping_msg)  # type: ignore[union-attr]
-            print(f"Sent: {ping_msg}")
+            self._logger.info(f"Sent: {ping_msg}")
         except serial.SerialException:
             raise serial.SerialException("Could not send ping message.")
 
@@ -219,7 +220,7 @@ class BluetoothApi(QObject):
         try:
             data = self._bluetooth.read(3)  # type: ignore[union-attr]
             message = SerialMessage.from_frame(data)
-            print(message.string)
+            self._logger.info(message.string)
 
             if message.message != SerialMessages.PING:
                 raise serial.SerialException("Invalid ping response received.")
@@ -237,11 +238,10 @@ class BluetoothApi(QObject):
 
     def _on_log(self, log: str) -> None:
         """Handle log messages from the SerialParser."""
-        print(f"LOG: {log}")
+        self._logger.info(f"LOG: {log}")
         self.log_output.emit(log)
 
     def _on_frame(self, message: SerialMessage) -> None:
         """Handle received serial messages from the SerialParser."""
-        if app_configs.DEBUG_ENABLED:
-            print(message.string)
+        self._logger.debug(message.string)
         self.serial_output.emit(message)

@@ -1,11 +1,26 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPalette
+import sys
+
+from PyQt6.QtCore import Qt, qInstallMessageHandler  # type: ignore
+from PyQt6.QtGui import QColor, QIcon, QPalette
 from PyQt6.QtWidgets import QApplication
+
+from utils import Assets
 
 from .ui import MainWindow
 
 
-def get_dark_pallet() -> QPalette:
+def _qt_msg_handler(_mode, _context, message: str) -> None:  # type: ignore
+    """Custom QT message handler to suppress specific warnings."""
+    if (
+        "setHighDpiScaleFactorRoundingPolicy must be called before creating the QGuiApplication instance"
+        in message
+    ):
+        return
+    sys.stderr.write(message + "\n")
+
+
+def _get_dark_pallet() -> QPalette:
+    """Create and return a dark color palette for the application."""
     dark = QPalette()
     dark.setColor(QPalette.ColorRole.Window, QColor(45, 45, 45))
     dark.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
@@ -23,11 +38,15 @@ def get_dark_pallet() -> QPalette:
 
 
 def start_gui() -> None:
-    """Start the GUI application."""
+    """
+    Start the GUI application.
+    """
+    qInstallMessageHandler(_qt_msg_handler)
     app = QApplication([])
 
+    app.setWindowIcon(QIcon(Assets.ICON_IMAGE))
     app.setStyle("Fusion")
-    app.setPalette(get_dark_pallet())
+    app.setPalette(_get_dark_pallet())
 
     window = MainWindow()
     window.show()

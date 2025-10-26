@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
-from utils import Styles, app_configs
+from utils import Styles, debug_enabled, enable_debug
 
 
 class DebugButton(QWidget):
@@ -33,7 +33,7 @@ class DebugButton(QWidget):
         """Add a debug button to the widget."""
         self._debug_button = QPushButton("Debug")
         self._debug_button.setCheckable(True)
-        self._debug_button.setChecked(False)
+        self._debug_button.setChecked(debug_enabled())
         self._debug_button.setToolTip("Enable/Disable debug prints")
         self._debug_button.setStyleSheet(Styles.CHECK_BUTTONS)
         self._debug_button.setFixedSize(70, 30)
@@ -41,7 +41,7 @@ class DebugButton(QWidget):
 
     def _set_debug_state(self) -> None:
         """Set the debug state in app_configs."""
-        app_configs.DEBUG_ENABLED = self._debug_button.isChecked()
+        enable_debug(self._debug_button.isChecked())
 
     def _set_layout(self) -> None:
         """Set the layout for the DebugButton widget."""

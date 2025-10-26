@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QStackedLayout, QVBoxLayout, QWidget
 
 from gui.workers import BluetoothListenerWorker
-from utils import SerialMessage, SerialMessages, app_configs
+from utils import SerialMessage, SerialMessages, debug_enabled
 
 from .debug_button import DebugButton
 from .str_display import StrDisplay
@@ -65,5 +65,5 @@ class ListenerWidget(QWidget):
 
     def _handle_serial_message(self, message: SerialMessage) -> None:
         """Handle incoming serial messages from the robot."""
-        if app_configs.DEBUG_ENABLED:
+        if debug_enabled():
             self.output_display.print_text(message.string)

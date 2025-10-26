@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from robot import LineFollower
-from utils import Files, SerialMessage, app_configs
+from utils import Files, SerialMessage, debug_enabled
 
 
 class BluetoothListenerWorker(QThread):
@@ -63,7 +63,7 @@ class BluetoothListenerWorker(QThread):
 
     def _on_serial_output(self, message: SerialMessage) -> None:
         """Handle serial message output from the Bluetooth device."""
-        if app_configs.DEBUG_ENABLED:
+        if debug_enabled():
             with open(Files.TEXT_FILE, "a", encoding="latin-1") as f:
                 f.write(f"{message.string}\n")
                 f.flush()
