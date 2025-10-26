@@ -44,7 +44,7 @@ def start_gui() -> None:
     qInstallMessageHandler(_qt_msg_handler)
     app = QApplication([])
 
-    app.setWindowIcon(QIcon(Assets.ICON_IMAGE))
+    app.setWindowIcon(QIcon(Assets.ALT_ICON_IMAGE))
     app.setStyle("Fusion")
     app.setPalette(_get_dark_pallet())
 
