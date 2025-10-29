@@ -70,5 +70,5 @@ def show_plot() -> None:
 if __name__ == "__main__":
     df = pd.read_csv(Files.ENCODER_DATA)
     x, y = plot_path(df)
-    # plot_markers(df, x, y)
+    plot_markers(df, x, y)
     show_plot()

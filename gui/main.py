@@ -33,6 +33,7 @@ def _get_dark_pallet() -> QPalette:
     dark.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
     dark.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
     dark.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+    dark.setColor(QPalette.ColorRole.PlaceholderText, QColor(150, 150, 150))
 
     return dark
 
