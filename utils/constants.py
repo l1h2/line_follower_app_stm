@@ -13,6 +13,7 @@ class Paths:
         if getattr(sys, "frozen", False)
         else os.path.join(ROOT, "data")
     )
+    TRACKS = os.path.join(DATA, "tracks")
     ASSETS = os.path.join(ROOT, "assets")
     BUILDS_DIR = os.path.join(ROOT, "builds")
     PYINSTALLER_BUILD = os.path.join(ROOT, "pyinstaller_build")
@@ -29,7 +30,6 @@ class Files:
     TEXT_FILE = os.path.join(Paths.DATA, "serial_data_log.txt")
     SENSOR_DATA = os.path.join(Paths.DATA, "sensors.csv")
     ENCODER_DATA = os.path.join(Paths.DATA, "encoder.csv")
-    WAYPOINTS = os.path.join(Paths.DATA, "waypoints.c")
 
 
 class Assets:
