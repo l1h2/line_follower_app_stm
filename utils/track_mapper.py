@@ -5,7 +5,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt6.QtWidgets import QDialog, QMessageBox, QVBoxLayout
 
-from utils import CsvHeaders, Files
+from .constants import CsvHeaders, Files
 
 
 def _plot_markers(ax: Axes, df: pd.DataFrame, x: np.ndarray, y: np.ndarray) -> None:

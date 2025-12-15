@@ -3,9 +3,8 @@ from PyQt6.QtWidgets import QPushButton, QStackedLayout, QVBoxLayout, QWidget
 
 from gui.workers import BluetoothListenerWorker
 from robot import LineFollower
-from utils import SerialMessage, SerialMessages, debug_enabled
+from utils import SerialMessage, SerialMessages, debug_enabled, show_plot
 
-from ...track_plot.track_mapper import show_plot
 from .debug_button import DebugButton
 from .str_display import StrDisplay
 from .text_display import TextDisplayContainer
