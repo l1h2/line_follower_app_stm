@@ -2,7 +2,9 @@
 
 This is a desktop application written in Python using `PyQt6` for the user interface. The app is designed to communicate with the Line Follower Robot via serial communication over `bluetooth`, allowing for remote control, monitoring, and debugging of the robot's state and performance.
 
-<!-- Add gif of robot in competition -->
+<div align="center">
+  <img src="docs/images/line_follower_exposition.gif" alt="Line Follower Robot">
+</div>
 
 ## Contents
 
