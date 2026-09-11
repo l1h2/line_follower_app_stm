@@ -35,7 +35,7 @@ This is a desktop application written in Python using `PyQt6` for the user inter
 
 The application can be run directly as a Python script or compiled into an executable using tools like `PyInstaller`. The following dependencies are required:
 
-- Python 3.11 or higher
+- Python 3.12 or higher
 - `PyQt6`
 - `pyserial`
 - `matplotlib`
@@ -102,7 +102,7 @@ line_follower_app_stm/
 - Follows PEP 8 style guidelines.
 - It uses `black` for code formatting with standard settings.
 - Uses `isort` for import sorting with standard settings.
-- Compatible with Python 3.11 and above.
+- Compatible with Python 3.12 and above.
 - Uses strict type hints for better code clarity and maintainability.
 - Includes Google-style docstrings for all public methods and functions.
 - Includes simplified docstrings for private methods and functions.

@@ -22,6 +22,7 @@ class RunningModes(IntEnum):
     ENCODER_TEST = 3
     PID = 4
     PURE_PURSUIT = 5
+    POSITION_CORRECTION = 6
 
 
 class StopModes(IntEnum):
