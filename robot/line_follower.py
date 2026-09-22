@@ -75,6 +75,7 @@ class LineFollower:
     - `laps (int)`: Number of laps completed.
     - `stop_time (int)`: Time to stop the robot.
     - `stop_distance (int)`: Distance to stop the robot.
+    - `stop_markers (int)`: Right side markers to stop the robot.
     - `log_data (bool)`: Indicates if data logging is enabled.
     - `turbine_pwm (int)`: Turbine PWM value for motor control.
     - `speed_kp (int)`: Proportional gain for speed PID controller.
@@ -121,6 +122,7 @@ class LineFollower:
         self._laps = None
         self._stop_time = None
         self._stop_distance = None
+        self._stop_markers = None
         self._log_data = None
         self._turbine_pwm = None
         self._speed_kp = None
@@ -152,6 +154,7 @@ class LineFollower:
             SerialMessages.LAPS: self._update_laps,
             SerialMessages.STOP_TIME: self._update_stop_time,
             SerialMessages.STOP_DISTANCE: self._update_stop_distance,
+            SerialMessages.STOP_MARKERS: self._update_stop_markers,
             SerialMessages.LOG_DATA: self._set_log_data,
             SerialMessages.TURBINE_PWM: self._update_turbine_pwm,
             SerialMessages.SPEED_KP: self._update_speed_kp,
@@ -254,6 +257,11 @@ class LineFollower:
     def stop_distance(self) -> int:
         """Distance to stop the robot."""
         return self._stop_distance if self._stop_distance is not None else 0
+
+    @property
+    def stop_markers(self) -> int:
+        """Right side markers to stop the robot."""
+        return self._stop_markers if self._stop_markers is not None else 0
 
     @property
     def log_data(self) -> bool:
@@ -482,6 +490,14 @@ class LineFollower:
             return False
 
         self._stop_distance = stop_distance
+        return True
+
+    def _update_stop_markers(self, stop_markers: int) -> bool:
+        """Updates the right side markers to stop the robot."""
+        if self._stop_markers == stop_markers:
+            return False
+
+        self._stop_markers = stop_markers
         return True
 
     def _set_log_data(self, log_data: int) -> bool:

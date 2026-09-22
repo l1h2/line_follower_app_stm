@@ -17,6 +17,7 @@ class GeneralSender(QWidget):
     - `laps_input (ParamSetter)`: Input field for the number of laps.
     - `stop_time_input (ParamSetter)`: Input field for the stop time value.
     - `stop_distance_input (ParamSetter)`: Input field for the stop distance value.
+    - `stop_markers_input (ParamSetter)`: Input field for the stop markers count.
     - `running_mode_input (ParamSetter)`: Mode select for the running mode.
     - `stop_mode_input (ParamSetter)`: Mode select for the stop mode.
     - `log_data_input (ParamSetter)`: Mode select for logging data.
@@ -35,6 +36,7 @@ class GeneralSender(QWidget):
         self.laps_input.send_value()
         self.stop_time_input.send_value()
         self.stop_distance_input.send_value()
+        self.stop_markers_input.send_value()
 
         self.running_mode_input.send_value()
         self.stop_mode_input.send_value()
@@ -54,6 +56,9 @@ class GeneralSender(QWidget):
         self.stop_time_input = ParamSetter("Stop Time (s):", SerialMessages.STOP_TIME)
         self.stop_distance_input = ParamSetter(
             "Stop Distance (cm):", SerialMessages.STOP_DISTANCE
+        )
+        self.stop_markers_input = ParamSetter(
+            "Stop Markers:", SerialMessages.STOP_MARKERS
         )
 
         self.running_mode_input = ParamSetter(
@@ -75,6 +80,7 @@ class GeneralSender(QWidget):
         first_column_layout.addWidget(self.laps_input)
         first_column_layout.addWidget(self.stop_time_input)
         first_column_layout.addWidget(self.stop_distance_input)
+        first_column_layout.addWidget(self.stop_markers_input)
         first_column_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         second_column_layout = QVBoxLayout()

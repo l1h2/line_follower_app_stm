@@ -41,6 +41,7 @@ class SerialMessages(IntEnum):
     WHEEL_BASE_CORRECTION = 28
     IMU_ALPHA = 29
     OPERATION_DATA = 30
+    STOP_MARKERS = 31
 
 
 SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
@@ -75,6 +76,7 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.SPEED_KFF: 2,
     SerialMessages.WHEEL_BASE_CORRECTION: 2,
     SerialMessages.IMU_ALPHA: 2,
+    SerialMessages.STOP_MARKERS: 1,
 }
 
 FLOAT_MESSAGES = {
