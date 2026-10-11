@@ -4,7 +4,7 @@ from io import TextIOWrapper
 from PyQt6.QtCore import QThread, QTimer, pyqtSignal
 
 from robot import LineFollower
-from utils import Files, SerialConfig, SerialMessage, debug_enabled
+from utils import Files, RunLogs, SerialConfig, SerialMessage, debug_enabled
 
 
 class BluetoothListenerWorker(QThread):
@@ -71,6 +71,10 @@ class BluetoothListenerWorker(QThread):
         """Handle log output from the Bluetooth device."""
         self._write_text_file(log)
         self.log_output.emit(log)
+
+        if log == RunLogs.END:
+            self._close_text_file()
+            self._line_follower.archive_operation_logs()
 
     def _on_serial_output(self, message: SerialMessage) -> None:
         """Handle serial message output from the Bluetooth device."""

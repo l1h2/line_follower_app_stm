@@ -14,6 +14,7 @@ class Paths:
         else os.path.join(ROOT, "data")
     )
     TRACKS = os.path.join(DATA, "tracks")
+    RUNS = os.path.join(DATA, "runs")
     ASSETS = os.path.join(ROOT, "assets")
     BUILDS_DIR = os.path.join(ROOT, "builds")
     PYINSTALLER_BUILD = os.path.join(ROOT, "pyinstaller_build")
@@ -56,6 +57,13 @@ class CsvHeaders:
     X = "x"
     Y = "y"
     HEADING = "heading"
+
+
+class RunLogs:
+    """Robot debug messages that start and end a run (firmware DEBUG_MODE only)."""
+
+    START = "Start command received in IDLE State"
+    END = "Transitioning from STOPPED to IDLE"
 
 
 class SerialConfig:

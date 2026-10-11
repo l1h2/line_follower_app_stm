@@ -2,7 +2,14 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import QObject, Qt, pyqtSignal
 
-from utils import RobotStates, RunningModes, SerialMessage, SerialMessages, StopModes
+from utils import (
+    RobotStates,
+    RunningModes,
+    SerialMessage,
+    SerialMessages,
+    StopModes,
+    archive_operation_logs,
+)
 
 from .api import BluetoothApi
 from .track_mapper import Mapper
@@ -91,6 +98,7 @@ class LineFollower:
     - `send_message(message: SerialMessage) -> None`: Sends a serial message to the robot via Bluetooth.
     - `clear_operation_logs() -> None`: Clears the operation log files, discarding any buffered operation data.
     - `flush_operation_logs() -> None`: Writes the buffered operation data to the operation log files.
+    - `archive_operation_logs() -> None`: Copies the logs of the run that just ended to a new folder in data/runs.
     - `connect_state_changer(slot: Callable[[RobotStates], None]) -> None`: Connects a slot to the state change signal.
     - `connect_attr_changer(slot: Callable[[SerialMessages, int], None]) -> None`: Connects a slot to the attribute change signal.
     """
@@ -345,6 +353,17 @@ class LineFollower:
         Writes the buffered operation data to the operation log files.
         """
         self._mapper.flush()
+
+    def archive_operation_logs(self) -> None:
+        """
+        Copies the logs of the run that just ended to a new folder in data/runs,
+        if data logging was enabled and operation data was received.
+        """
+        if not self.log_data:
+            return
+
+        self._mapper.close()
+        archive_operation_logs()
 
     def connect_state_changer(self, slot: Callable[[RobotStates], None]) -> None:
         """
