@@ -269,16 +269,15 @@ class BluetoothApi(QObject):
 
     def _on_frame(self, message: SerialMessage) -> None:
         """Handle received serial messages from the SerialParser."""
-        self._logger.debug(message.string)
-
         if message.message == SerialMessages.OPERATION_DATA:
             self.telemetry_output.emit(message)
             # Set after handling the data, so a later pause closes any reopened files
             self._telemetry_active = True
-            if debug_enabled():
+            if debug_enabled():  # Displayed, but not logged to the console per message
                 self.serial_output.emit(message)
             return
 
+        self._logger.debug(message.string)
         if message.message != SerialMessages.INVALID_MESSAGE:
             self._pause_telemetry()  # Corrupted frames don't interrupt the stream
         self.serial_output.emit(message)

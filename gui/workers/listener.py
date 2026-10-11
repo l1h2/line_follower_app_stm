@@ -1,4 +1,7 @@
-from PyQt6.QtCore import QThread, pyqtSignal
+import atexit
+from io import TextIOWrapper
+
+from PyQt6.QtCore import QThread, QTimer, pyqtSignal
 
 from robot import LineFollower
 from utils import Files, SerialConfig, SerialMessage, debug_enabled
@@ -30,9 +33,17 @@ class BluetoothListenerWorker(QThread):
         super().__init__()
         self._line_follower = LineFollower()
         self._listening = False
+        self._text_file: TextIOWrapper | None = None
+
+        self._close_timer = QTimer(self)
+        self._close_timer.setSingleShot(True)
+        self._close_timer.setInterval(int(SerialConfig.LOG_FLUSH_INTERVAL * 1000))
+        self._close_timer.timeout.connect(self._close_text_file)
 
         self._line_follower.bluetooth.log_output.connect(self._on_log_output)
         self._line_follower.bluetooth.serial_output.connect(self._on_serial_output)
+
+        atexit.register(self._close_text_file)
 
     @property
     def listening(self) -> bool:
@@ -58,15 +69,25 @@ class BluetoothListenerWorker(QThread):
 
     def _on_log_output(self, log: str) -> None:
         """Handle log output from the Bluetooth device."""
-        with open(Files.TEXT_FILE, "a", encoding="latin-1") as f:
-            f.write(f"{log}\n")
-            f.flush()
+        self._write_text_file(log)
         self.log_output.emit(log)
 
     def _on_serial_output(self, message: SerialMessage) -> None:
         """Handle serial message output from the Bluetooth device."""
         if debug_enabled():
-            with open(Files.TEXT_FILE, "a", encoding="latin-1") as f:
-                f.write(f"{message.string}\n")
-                f.flush()
+            self._write_text_file(message.string)
         self.serial_output.emit(message)
+
+    def _write_text_file(self, text: str) -> None:
+        """Write a line to the text log file, which a timer closes to write in batches."""
+        if self._text_file is None:
+            self._text_file = open(Files.TEXT_FILE, "a", encoding="latin-1")
+            self._close_timer.start()
+
+        self._text_file.write(f"{text}\n")
+
+    def _close_text_file(self) -> None:
+        """Close the text log file, writing its buffered lines."""
+        if self._text_file is not None:
+            self._text_file.close()
+            self._text_file = None
