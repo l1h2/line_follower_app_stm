@@ -1,7 +1,7 @@
-import time
+from itertools import dropwhile
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHBoxLayout, QTextEdit, QWidget
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import QHBoxLayout, QPlainTextEdit, QWidget
 
 from utils import UIConstants
 
@@ -23,7 +23,7 @@ class TextDisplayContainer(QWidget):
 
     def print_text(self, text: str) -> None:
         """
-        Print text to the QTextEdit widget displaying the text in a scrollable area.
+        Print text to the QPlainTextEdit widget displaying the text in a scrollable area.
 
         Args:
             text (str): The text to be displayed.
@@ -46,12 +46,12 @@ class TextDisplayContainer(QWidget):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
 
-class TextDisplay(QTextEdit):
+class TextDisplay(QPlainTextEdit):
     """
     ### TextDisplay Widget
 
     A widget that displays text in a scrollable area. It is used to show the output of the robot's
-    operations.
+    operations. Printed text is buffered and displayed in batches to keep the UI responsive.
 
     #### Parameters:
     - `max_display_lines (int)`: The maximum number of lines to display in the text area.
@@ -69,37 +69,43 @@ class TextDisplay(QTextEdit):
         super().__init__(parent=parent)
         self.setReadOnly(True)
         self.setFixedWidth(UIConstants.DISPLAY_WIDTH)
+        self.setMaximumBlockCount(max_display_lines)
 
-        self._max_display_lines = max_display_lines
-        self._last_crop_time = time.time()
-        self._crop_interval = 0.034  # ~30 fps in seconds
+        self._pending_text: list[str] = []
+
+        self._update_timer = QTimer(self)
+        self._update_timer.setSingleShot(True)
+        self._update_timer.setInterval(50)  # Milliseconds, up to 20 fps
+        self._update_timer.timeout.connect(self._append_pending_text)
 
     def print_text(self, text: str) -> None:
         """
-        Print text to the QTextEdit widget displaying the text in a scrollable area.
+        Print text to the QPlainTextEdit widget displaying the text in a scrollable area.
 
         Args:
             text (str): The text to be displayed.
         """
-        self.append(text)
+        self._pending_text.append(text)
 
-        if self._last_crop_time + self._crop_interval < time.time():
-            self._last_crop_time = time.time()
-            self._crop_text()
+        if not self._update_timer.isActive():
+            self._update_timer.start()
 
-    def _crop_text(self) -> None:
-        """Crop the text in the QTextEdit widget to fit within the maximum display lines."""
-        current_text = self.toPlainText()
-        lines = current_text.split("\n")
+    def _append_pending_text(self) -> None:
+        """Append the buffered text to the widget in a single update."""
+        texts = self._pending_text
+        self._pending_text = []
 
-        if len(lines) <= self._max_display_lines:
+        document = self.document()
+        if document is not None and document.isEmpty():
+            texts = list(dropwhile(lambda text: not text, texts))
+
+        if not texts:
             return
 
-        vertical_scrollbar = self.verticalScrollBar()
-        if not vertical_scrollbar:
-            return
-
-        scroll_position = vertical_scrollbar.value()
-
-        self.setPlainText("\n".join(lines[-self._max_display_lines :]))
-        vertical_scrollbar.setValue(scroll_position)
+        texts = texts[-self.maximumBlockCount() :]
+        scrollbar = self.verticalScrollBar()
+        if scrollbar is None or scrollbar.value() == scrollbar.maximum():
+            self.appendPlainText("\n".join(texts))
+        else:
+            for text in texts:
+                self.appendPlainText(text)

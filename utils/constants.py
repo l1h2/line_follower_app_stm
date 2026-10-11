@@ -74,7 +74,7 @@ class SerialConfig:
 class UIConstants:
     """UI constants for the program."""
 
-    MAX_DISPLAY_LINES = 70
+    MAX_DISPLAY_LINES = 100
     ROW_HEIGHT = 40
     DISPLAY_WIDTH = 450
 
