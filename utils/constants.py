@@ -65,6 +65,9 @@ class SerialConfig:
     BAUD_RATE = 115200
     TIMEOUT = 1
     PING_TIMEOUT = TIMEOUT * 1.1
+    # Wait between reads when no data is waiting. At 115200 baud at most ~720 B arrive
+    # in the meantime (with Windows timer rounding), well under the 4 KB input buffer.
+    POLL_INTERVAL_MS = 50
 
 
 class UIConstants:

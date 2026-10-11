@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from robot import LineFollower
-from utils import Files, SerialMessage, debug_enabled
+from utils import Files, SerialConfig, SerialMessage, debug_enabled
 
 
 class BluetoothListenerWorker(QThread):
@@ -46,7 +46,8 @@ class BluetoothListenerWorker(QThread):
         self._listening = True
 
         while self._listening:
-            self._line_follower.bluetooth.read_data()
+            if not self._line_follower.bluetooth.read_data():
+                self.msleep(SerialConfig.POLL_INTERVAL_MS)
 
     def stop(self) -> None:
         """

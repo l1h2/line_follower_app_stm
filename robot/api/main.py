@@ -31,7 +31,7 @@ class BluetoothApi(QObject):
     - `set_com_port(com_port: str) -> bool`: Sets the COM port for the Bluetooth connection.
     - `connect_serial() -> bool`: Connects to the Bluetooth device using the specified COM port.
     - `disconnect_serial() -> None`: Disconnects from the Bluetooth device.
-    - `read_data() -> None`: Reads data from the Bluetooth device.
+    - `read_data() -> bool`: Reads data from the Bluetooth device.
     - `write_data(data: bytes) -> None`: Writes binary data to the Bluetooth device.
     """
 
@@ -146,28 +146,33 @@ class BluetoothApi(QObject):
         self._logger.info("Bluetooth disconnected.")
         self.connection_change.emit()
 
-    def read_data(self) -> None:
+    def read_data(self) -> bool:
         """
         Read data from the Bluetooth device.
+
+        Returns:
+            bool: True if any data was read, False otherwise.
         """
         if not self.connected:
-            return
+            return False
 
         try:
             if self._bluetooth.in_waiting <= 0:  # type: ignore[union-attr]
                 self._check_timeout()
-                return
+                return False
 
             self._last_receive_time = time()
             data = self._bluetooth.read(self._bluetooth.in_waiting)  # type: ignore[union-attr]
             for byte in data:
                 self._parser.feed_byte(byte)
+            return True
 
         except serial.SerialException as e:
             msg = f"Failed to read data from Bluetooth device: {e}"
             self._logger.critical(msg)
             self.disconnect_serial()
             self.connection_failed.emit(msg)
+            return False
 
     def write_data(self, data: bytes) -> None:
         """
@@ -197,10 +202,10 @@ class BluetoothApi(QObject):
 
     def _check_timeout(self) -> None:
         """Check for read timeout and handle it."""
-        self._check_current_port()
         if time() - self._last_receive_time <= SerialConfig.PING_TIMEOUT:
             return
 
+        self._check_current_port()
         self._ping_robot()
 
     def _check_current_port(self) -> None:
