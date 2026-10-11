@@ -28,6 +28,7 @@ class ModeSelect(QWidget):
 
     #### Methods:
     - `send_value() -> None`: Sends the selected mode to the robot.
+    - `matches(value: str) -> bool`: Checks if the given mode is selected.
     """
 
     def __init__(
@@ -54,6 +55,18 @@ class ModeSelect(QWidget):
         Send the value from the combo box to the robot.
         """
         self._on_input()
+
+    def matches(self, value: str) -> bool:
+        """
+        Check if the given mode is selected, like the robot's current one.
+
+        Args:
+            value (str): The mode name to compare with.
+
+        Returns:
+            bool: True if the given mode is selected, False otherwise.
+        """
+        return self.value == value
 
     def _init_ui(self, label: str) -> None:
         """Initialize the UI components of the ModeSelect widget."""

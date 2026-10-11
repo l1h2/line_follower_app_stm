@@ -33,6 +33,7 @@ class NumInput(QWidget):
 
     #### Methods:
     - `send_value() -> None`: Sends the value from the input field to the robot.
+    - `matches(value: str) -> bool`: Checks if the input holds the given value.
     """
 
     def __init__(
@@ -63,6 +64,24 @@ class NumInput(QWidget):
         Send the value from the input field to the robot.
         """
         self._on_input()
+
+    def matches(self, value: str) -> bool:
+        """
+        Check if the input holds the given value, like the robot's current one.
+        Float fields compare as numbers, and invalid input never matches.
+
+        Args:
+            value (str): The value to compare with.
+
+        Returns:
+            bool: True if the input holds the value, False otherwise.
+        """
+        if not self._is_valid():
+            return False
+
+        if self._is_float:
+            return float(self.value) == float(value)
+        return self.value == value
 
     def _init_ui(self, label: str) -> None:
         """Initialize the UI components of the ByteInput widget."""
@@ -128,13 +147,21 @@ class NumInput(QWidget):
             if text.isdigit() and int(text) > self._max_value:
                 self.input.setText(f"{self._max_value}")
 
+    def _is_valid(self) -> bool:
+        """Check that the input is a complete number within the field's range."""
+        try:
+            value = float(self.value) if self._is_float else int(self.value)
+        except ValueError:
+            return False
+
+        return 0 <= value <= self._max_value
+
     def _on_input(self) -> None:
         """Handle the input value and send it to the robot."""
-        value = self.input.text()
-
-        if not value:
+        if not self._is_valid():
             return
 
+        value = self.input.text()
         if self._is_float:
             value = float(value) * 10**self._f_precision + 0.5
 
