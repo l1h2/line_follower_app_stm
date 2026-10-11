@@ -1,12 +1,19 @@
 import atexit
 import re
-from time import time
+from time import monotonic
 
 import serial
 from PyQt6.QtCore import QObject, pyqtSignal
 from serial.tools import list_ports, list_ports_common
 
-from utils import SerialConfig, SerialMessage, SerialMessages, SerialParser, get_logger
+from utils import (
+    SerialConfig,
+    SerialMessage,
+    SerialMessages,
+    SerialParser,
+    debug_enabled,
+    get_logger,
+)
 
 
 class BluetoothApi(QObject):
@@ -19,7 +26,9 @@ class BluetoothApi(QObject):
     - `connection_failed (str)`: Signal emitted when a connection fails, with an error message.
     - `connection_change`: Signal emitted when the Bluetooth connection changes.
     - `log_output (bool)`: Signal emitted when a log message is received.
-    - `serial_output (SerialMessage)`: Signal emitted when a serial message is received.
+    - `serial_output (SerialMessage)`: Signal emitted when a serial message is received. Operation data messages are only emitted in debug mode.
+    - `telemetry_output (SerialMessage)`: Signal emitted from the listener thread for every operation data message. Should be connected with a direct connection.
+    - `telemetry_paused`: Signal emitted when the operation data stream pauses or the connection closes. Should be connected with a direct connection.
 
     #### Properties:
     - `port (str)`: Current COM port for the Bluetooth connection.
@@ -39,13 +48,16 @@ class BluetoothApi(QObject):
     connection_change = pyqtSignal()
     log_output = pyqtSignal(str)
     serial_output = pyqtSignal(SerialMessage)
+    telemetry_output = pyqtSignal(SerialMessage)
+    telemetry_paused = pyqtSignal()
 
     def __init__(self):
         super().__init__()
         self._bluetooth: serial.Serial | None = None
         self._com_port = self._get_initial_port()
         self._parser = SerialParser(self._on_frame, self._on_log)
-        self._last_receive_time = 0
+        self._last_receive_time = float("-inf")
+        self._telemetry_active = False
         self._logger = get_logger()
 
         atexit.register(self._safe_disconnect)
@@ -144,6 +156,7 @@ class BluetoothApi(QObject):
         self._bluetooth = None
 
         self._logger.info("Bluetooth disconnected.")
+        self._pause_telemetry()
         self.connection_change.emit()
 
     def read_data(self) -> bool:
@@ -154,6 +167,7 @@ class BluetoothApi(QObject):
             bool: True if any data was read, False otherwise.
         """
         if not self.connected:
+            self._pause_telemetry()  # Closes log files reopened while disconnecting
             return False
 
         try:
@@ -161,7 +175,7 @@ class BluetoothApi(QObject):
                 self._check_timeout()
                 return False
 
-            self._last_receive_time = time()
+            self._last_receive_time = monotonic()
             data = self._bluetooth.read(self._bluetooth.in_waiting)  # type: ignore[union-attr]
             for byte in data:
                 self._parser.feed_byte(byte)
@@ -202,7 +216,7 @@ class BluetoothApi(QObject):
 
     def _check_timeout(self) -> None:
         """Check for read timeout and handle it."""
-        if time() - self._last_receive_time <= SerialConfig.PING_TIMEOUT:
+        if monotonic() - self._last_receive_time <= SerialConfig.PING_TIMEOUT:
             return
 
         self._check_current_port()
@@ -238,7 +252,7 @@ class BluetoothApi(QObject):
             if message.message != SerialMessages.PING:
                 raise serial.SerialException("Invalid ping response received.")
 
-            self._last_receive_time = time()
+            self._last_receive_time = monotonic()
 
         except serial.SerialException:
             raise serial.SerialException("Robot took too long to respond.")
@@ -257,4 +271,23 @@ class BluetoothApi(QObject):
     def _on_frame(self, message: SerialMessage) -> None:
         """Handle received serial messages from the SerialParser."""
         self._logger.debug(message.string)
+
+        if message.message == SerialMessages.OPERATION_DATA:
+            self.telemetry_output.emit(message)
+            # Set after handling the data, so a later pause closes any reopened files
+            self._telemetry_active = True
+            if debug_enabled():
+                self.serial_output.emit(message)
+            return
+
+        if message.message != SerialMessages.INVALID_MESSAGE:
+            self._pause_telemetry()  # Corrupted frames don't interrupt the stream
         self.serial_output.emit(message)
+
+    def _pause_telemetry(self) -> None:
+        """Signal that the operation data stream paused, if it was active."""
+        if not self._telemetry_active:
+            return
+
+        self._telemetry_active = False
+        self.telemetry_paused.emit()

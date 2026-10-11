@@ -1,5 +1,11 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QPushButton, QStackedLayout, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QStackedLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
 from gui.workers import BluetoothListenerWorker
 from robot import LineFollower
@@ -52,7 +58,12 @@ class ListenerWidget(QWidget):
         self.plot_button.setFixedWidth(100)
         self.plot_button.setToolTip("Show mapped track plot")
         self.plot_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.plot_button.clicked.connect(show_plot)
+        self.plot_button.clicked.connect(self._show_plot)
+
+    def _show_plot(self) -> None:
+        """Show the mapped track plot with all the operation data received so far."""
+        LineFollower().flush_operation_logs()
+        show_plot()
 
     def _set_layout(self) -> None:
         """Set the layout for the widget."""
@@ -71,6 +82,10 @@ class ListenerWidget(QWidget):
         self._worker.log_output.connect(self._handle_log_output)
         self._worker.serial_output.connect(self._handle_serial_message)
         self._worker.start()
+
+        app = QApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(self._worker.stop)
 
     def _handle_log_output(self, data: str) -> None:
         """Handle the log output from the Bluetooth listener worker."""

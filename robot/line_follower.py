@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, Qt, pyqtSignal
 
 from utils import RobotStates, RunningModes, SerialMessage, SerialMessages, StopModes
 
@@ -89,6 +89,8 @@ class LineFollower:
 
     #### Methods:
     - `send_message(message: SerialMessage) -> None`: Sends a serial message to the robot via Bluetooth.
+    - `clear_operation_logs() -> None`: Clears the operation log files, discarding any buffered operation data.
+    - `flush_operation_logs() -> None`: Writes the buffered operation data to the operation log files.
     - `connect_state_changer(slot: Callable[[RobotStates], None]) -> None`: Connects a slot to the state change signal.
     - `connect_attr_changer(slot: Callable[[SerialMessages, int], None]) -> None`: Connects a slot to the attribute change signal.
     """
@@ -138,6 +140,16 @@ class LineFollower:
         self._mapper = Mapper()
 
         self._bluetooth.serial_output.connect(self._handle_serial_message)
+        # Operation data is logged on the listener thread to keep the GUI thread free,
+        # and the log files are closed whenever its stream pauses.
+        self._bluetooth.telemetry_output.connect(
+            self._handle_operation_data,
+            Qt.ConnectionType.DirectConnection,  # type: ignore[call-arg]
+        )
+        self._bluetooth.telemetry_paused.connect(
+            self._mapper.close,
+            Qt.ConnectionType.DirectConnection,  # type: ignore[call-arg]
+        )
 
         self._config_map = {
             SerialMessages.PID_KP: self._update_kp,
@@ -322,6 +334,18 @@ class LineFollower:
         """
         self._bluetooth.write_data(message.frame)
 
+    def clear_operation_logs(self) -> None:
+        """
+        Clears the operation log files, discarding any buffered operation data.
+        """
+        self._mapper.reset()
+
+    def flush_operation_logs(self) -> None:
+        """
+        Writes the buffered operation data to the operation log files.
+        """
+        self._mapper.flush()
+
     def connect_state_changer(self, slot: Callable[[RobotStates], None]) -> None:
         """
         Connects a slot to the state change signal.
@@ -340,12 +364,13 @@ class LineFollower:
         """
         self._signal_handler.attr_changed.connect(slot)
 
+    def _handle_operation_data(self, message: SerialMessage) -> None:
+        """Handles incoming operation data messages on the listener thread."""
+        self._mapper.handle_operation_data(message.payload)
+
     def _handle_serial_message(self, message: SerialMessage) -> None:
         """Handles incoming serial messages and updates config params."""
-        if message.message == SerialMessages.OPERATION_DATA:
-            self._mapper.handle_operation_data(message.payload)
-            return
-
+        # Debug mode also sends operation data here, but it is logged elsewhere
         if message.message not in self._config_map:
             return
 

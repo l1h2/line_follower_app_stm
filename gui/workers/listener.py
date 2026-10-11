@@ -20,7 +20,7 @@ class BluetoothListenerWorker(QThread):
 
     #### Methods:
     - `run()`: Starts the listener thread.
-    - `stop()`: Stops the listener thread.
+    - `stop()`: Stops the listener thread, waiting for its current read to finish.
     """
 
     log_output = pyqtSignal(str)
@@ -51,9 +51,10 @@ class BluetoothListenerWorker(QThread):
 
     def stop(self) -> None:
         """
-        Stops the listener thread.
+        Stops the listener thread, waiting for its current read to finish.
         """
         self._listening = False
+        self.wait()
 
     def _on_log_output(self, log: str) -> None:
         """Handle log output from the Bluetooth device."""
