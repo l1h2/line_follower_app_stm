@@ -58,6 +58,8 @@ def show_plot() -> None:
     """
     try:
         df = pd.read_csv(Files.ENCODER_DATA)
+        if list(df.columns) != CsvHeaders.SENSOR_DATA.split(","):
+            raise ValueError("encoder.csv has no valid header row")
     except Exception as e:
         QMessageBox.warning(None, "Plot error", f"Failed to load data:\n\n{e}")
         return
