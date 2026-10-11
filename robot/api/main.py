@@ -177,8 +177,7 @@ class BluetoothApi(QObject):
 
             self._last_receive_time = monotonic()
             data = self._bluetooth.read(self._bluetooth.in_waiting)  # type: ignore[union-attr]
-            for byte in data:
-                self._parser.feed_byte(byte)
+            self._parser.feed(data)
             return True
 
         except serial.SerialException as e:

@@ -79,6 +79,15 @@ SERIAL_MESSAGE_SIZES: dict[SerialMessages, int] = {
     SerialMessages.STOP_MARKERS: 1,
 }
 
+# Lookup tables indexed by the received ID byte, used to parse frames without Enum lookups
+_MESSAGE_BY_ID: tuple[SerialMessages, ...] = tuple(
+    SerialMessages(byte) if byte in SerialMessages else SerialMessages.INVALID_MESSAGE
+    for byte in range(256)
+)
+_PAYLOAD_SIZE_BY_ID: tuple[int, ...] = tuple(
+    SERIAL_MESSAGE_SIZES.get(message, 0) for message in _MESSAGE_BY_ID
+)
+
 FLOAT_MESSAGES = {
     SerialMessages.BASE_SPEED: 2,
     SerialMessages.PID_ALPHA: 2,
@@ -258,6 +267,7 @@ class SerialParser:
     - `on_log (Callable[[str], None])`: Callback function invoked when a log message is parsed.
 
     #### Methods:
+    - `feed(data: bytes) -> None`: Feeds a chunk of bytes into the parser.
     - `feed_byte(byte: int) -> None`: Feeds a single byte into the parser.
     """
 
@@ -275,6 +285,49 @@ class SerialParser:
 
         self._on_frame = on_frame
         self._on_log = on_log
+
+    def feed(self, data: bytes) -> None:
+        """
+        Feeds a chunk of bytes into the parser.
+
+        Complete frames and log text are parsed in bulk, invoking the same callbacks in the
+        same order as feeding each byte to `feed_byte`.
+
+        Args:
+            data (bytes): The bytes to feed into the parser.
+        """
+        index = 0
+        data_size = len(data)
+
+        while self._state != self._SYNC and index < data_size:
+            self.feed_byte(data[index])
+            index += 1
+
+        while index < data_size:
+            start = data.find(SERIAL_FRAME_START, index)
+            if start < 0:
+                self._handle_log_bytes(data[index:])
+                return
+
+            if start > index:
+                self._handle_log_bytes(data[index:start])
+
+            if start + 1 == data_size:
+                self.feed_byte(SERIAL_FRAME_START)
+                return
+
+            msg_id = data[start + 1]
+            checksum_index = start + 2 + _PAYLOAD_SIZE_BY_ID[msg_id]
+            # Incomplete frame, finished by the next chunk
+            if checksum_index >= data_size:
+                for byte in data[start:]:
+                    self.feed_byte(byte)
+                return
+
+            self._handle_frame(
+                msg_id, data[start + 2 : checksum_index], data[checksum_index]
+            )
+            index = checksum_index + 1
 
     def feed_byte(self, byte: int) -> None:
         """
@@ -331,6 +384,13 @@ class SerialParser:
         self._state = self._SYNC
         self._on_frame(self._message)
 
+    def _handle_frame(self, msg_id: int, payload: bytes, checksum: int) -> None:
+        """Finalize the message of a frame received complete in a single chunk."""
+        self._message = SerialMessage.from_message(
+            _MESSAGE_BY_ID[msg_id], payload, checksum
+        )
+        self._on_frame(self._message)
+
     def _handle_log_byte(self, byte: int) -> None:
         """Handle bytes that are part of log messages."""
         if byte != 0x0A:  # Newline ('\n')
@@ -340,6 +400,17 @@ class SerialParser:
         data = self._log_buffer.decode("latin-1")
         self._log_buffer.clear()
         self._on_log(data)
+
+    def _handle_log_bytes(self, data: bytes) -> None:
+        """Handle a run of bytes that are part of log messages."""
+        *lines, remainder = data.split(b"\n")
+        for line in lines:
+            self._log_buffer += line
+            log = self._log_buffer.decode("latin-1")
+            self._log_buffer.clear()
+            self._on_log(log)
+
+        self._log_buffer += remainder
 
 
 class OperationData:
