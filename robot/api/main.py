@@ -1,5 +1,6 @@
 import atexit
 import re
+from threading import Lock
 from time import monotonic
 
 import serial
@@ -54,6 +55,7 @@ class BluetoothApi(QObject):
     def __init__(self):
         super().__init__()
         self._bluetooth: serial.Serial | None = None
+        self._port_lock = Lock()
         self._com_port = self._get_initial_port()
         self._parser = SerialParser(self._on_frame, self._on_log)
         self._last_receive_time = float("-inf")
@@ -61,7 +63,7 @@ class BluetoothApi(QObject):
         self._telemetry_active = False
         self._logger = get_logger()
 
-        atexit.register(self._safe_disconnect)
+        atexit.register(self._close_port)
 
     @property
     def port(self) -> str:
@@ -79,7 +81,7 @@ class BluetoothApi(QObject):
     @property
     def connected(self) -> bool:
         """Check if the Bluetooth connection is open."""
-        return self._bluetooth is not None and self._bluetooth.is_open
+        return self._bluetooth is not None
 
     @staticmethod
     def _port_key(port: list_ports_common.ListPortInfo) -> tuple[int | float, str]:
@@ -153,9 +155,7 @@ class BluetoothApi(QObject):
         """
         Disconnect from the Bluetooth device.
         """
-        if self.connected:
-            self._bluetooth.close()  # type: ignore[union-attr]
-        self._bluetooth = None
+        self._close_port()
 
         self._logger.info("Bluetooth disconnected.")
         self._pause_telemetry()
@@ -168,22 +168,27 @@ class BluetoothApi(QObject):
         Returns:
             bool: True if any data was read, False otherwise.
         """
-        if not self.connected:
+        bluetooth = self._bluetooth
+        if bluetooth is None:
             self._pause_telemetry()  # Closes log files reopened while disconnecting
             return False
 
         try:
-            if self._bluetooth.in_waiting <= 0:  # type: ignore[union-attr]
-                self._check_timeout()
+            with self._port_lock:
+                data = bluetooth.read(bluetooth.in_waiting)
+            if not data:
+                self._check_timeout(bluetooth)
                 return False
 
             self._last_receive_time = monotonic()
             self._ping_time = None  # Any data shows the robot is alive
-            data = self._bluetooth.read(self._bluetooth.in_waiting)  # type: ignore[union-attr]
             self._parser.feed(data)
             return True
 
         except serial.SerialException as e:
+            if bluetooth is not self._bluetooth:
+                return False
+
             msg = f"Failed to read data from Bluetooth device: {e}"
             self._logger.critical(msg)
             self.disconnect_serial()
@@ -197,13 +202,18 @@ class BluetoothApi(QObject):
         Args:
             data (bytes): The binary data to write.
         """
-        if not self.connected:
+        bluetooth = self._bluetooth
+        if bluetooth is None:
             return
 
         try:
-            self._bluetooth.write(data)  # type: ignore[union-attr]
+            with self._port_lock:
+                bluetooth.write(data)
             self._logger.info(f"Sent: {data}")
         except serial.SerialException as e:
+            if bluetooth is not self._bluetooth:
+                return
+
             msg = f"Failed to write data to Bluetooth device: {e}"
             self._logger.critical(msg)
             self.disconnect_serial()
@@ -216,7 +226,7 @@ class BluetoothApi(QObject):
             return SerialConfig.PORT
         return ports[0] if ports else ""
 
-    def _check_timeout(self) -> None:
+    def _check_timeout(self, bluetooth: serial.Serial) -> None:
         """Ping the robot when it goes silent, and disconnect if it stays silent."""
         if monotonic() - self._last_receive_time <= SerialConfig.PING_TIMEOUT:
             return
@@ -224,7 +234,7 @@ class BluetoothApi(QObject):
         ping_time = self._ping_time
         if ping_time is None:
             self._check_current_port()
-            self._send_ping()
+            self._send_ping(bluetooth)
             self._ping_time = monotonic()
         elif monotonic() - ping_time > SerialConfig.TIMEOUT:
             raise serial.SerialException("Robot took too long to respond.")
@@ -236,21 +246,23 @@ class BluetoothApi(QObject):
             self._com_port = self._get_initial_port()
             raise serial.SerialException("COM port disconnected.")
 
-    def _send_ping(self) -> None:
+    def _send_ping(self, bluetooth: serial.Serial) -> None:
         """Send a ping command to the robot to check connectivity."""
         ping_msg = SerialMessage.from_message(SerialMessages.PING).frame
 
         try:
-            self._bluetooth.write(ping_msg)  # type: ignore[union-attr]
+            with self._port_lock:
+                bluetooth.write(ping_msg)
             self._logger.info(f"Sent: {ping_msg}")
         except serial.SerialException:
             raise serial.SerialException("Could not send ping message to the robot.")
 
-    def _safe_disconnect(self) -> None:
-        """Safely disconnect from the Bluetooth device when the program exits."""
-        if self.connected:
-            self._bluetooth.close()  # type: ignore[union-attr]
-        self._bluetooth = None
+    def _close_port(self) -> None:
+        """Detach the serial port and close it, so other threads stop using it."""
+        with self._port_lock:
+            bluetooth, self._bluetooth = self._bluetooth, None
+            if bluetooth is not None:
+                bluetooth.close()
 
     def _on_log(self, log: str) -> None:
         """Handle log messages from the SerialParser."""
